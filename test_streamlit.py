@@ -37,6 +37,30 @@ class StreamlitTests(unittest.TestCase):
         self.assertFalse(self.app.exception)
         self.assertEqual(self.app.dataframe[0].value.iloc[0]["name"], "Pulaski County")
 
+    def test_old_result_schema_recovers_without_reboot(self):
+        import copy
+        # A previous imported engine can have produced old-schema results
+        # stamped with the current revision during a live deployment.
+        stale = copy.deepcopy(self.app.session_state.result)
+        del stale["inputs"]["initial_annual_infectious_transports"]
+        del stale["receipt_probability_history"]
+        self.app.session_state.result = stale
+        self.app.run()
+        self.assertFalse(self.app.exception)
+        self.assertIn("initial_annual_infectious_transports", self.app.session_state.result["inputs"])
+        self.assertEqual(self.app.metric[0].value, "2,006")
+
+    def test_cached_engine_is_reloaded_after_model_update(self):
+        import model_engine
+        with patch.object(model_engine, "run", side_effect=AssertionError("Old engine was retained")):
+            with patch.object(model_engine, "_streamlit_revision", "previous-release"):
+                # Changing an input ensures this exercises the calculation,
+                # rather than returning a previously cached default scenario.
+                self.widget("number_input", "Random seed").set_value(20261010)
+                self.apply()
+                self.assertEqual(self.app.session_state.result["inputs"]["random_seed"], 20261010)
+                self.assertIn("initial_annual_infectious_transports", self.app.session_state.result["inputs"])
+
     def test_applied_scenarios_invalid_input_and_speed_mode(self):
         self.widget("number_input", "Detected transported rabid raccoons / year").set_value(0.)
         self.apply()

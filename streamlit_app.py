@@ -1,6 +1,7 @@
 """Public Streamlit interface. Run: python -m streamlit run streamlit_app.py."""
 import json
 import hashlib
+import importlib
 import math
 import os
 import sqlite3
@@ -13,7 +14,9 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-from model_engine import run
+import model_engine
+import model_utils
+import landscape_engine
 
 ROOT = Path(__file__).resolve().parent
 SPEED_KEYS = ("speed_very_low", "speed_low", "speed_moderate", "speed_high")
@@ -22,6 +25,15 @@ MODEL_REVISION = hashlib.sha256(b"".join((ROOT / name).read_bytes() for name in
     ("model_info.json", "model_engine.py", "model_utils.py", "landscape_engine.py",
      "model_data.npz", "landscape_data.npz", "route_kernels.npz"))).hexdigest()
 MODEL_INFO = json.loads((ROOT / "model_info.json").read_text(encoding="utf-8"))
+# Streamlit reruns this script after a Git update, while Python can retain
+# imported engines and their in-memory array caches from the previous release.
+# Reload the dependent modules together when the bundled model changes.
+if getattr(model_engine, "_streamlit_revision", None) != MODEL_REVISION:
+    importlib.invalidate_caches()
+    importlib.reload(model_utils)
+    importlib.reload(landscape_engine)
+    importlib.reload(model_engine)
+    model_engine._streamlit_revision = MODEL_REVISION
 SOURCE_COLORS = ("#a6b2bb", "#438bb5", "#e7a13e", "#cf704b")
 SOURCE_LABELS = ("Not reached", "Endemic at year 0", "Spread from main enzootic area", "Spread from translocation nidi")
 EXPERT_FIELDS = [
@@ -47,10 +59,27 @@ def county_names(revision=MODEL_REVISION):
 
 
 @st.cache_data(max_entries=16, show_spinner=False)
-def calculate(params, revision=MODEL_REVISION):
-    result = run(params)
+def calculate(params, revision):
+    result = model_engine.run(params)
     result["model_revision"] = revision
     return result
+
+
+def current_result(result):
+    """Reject old session results even if they have a new revision label."""
+    if not isinstance(result, dict) or result.get("model_revision") != MODEL_REVISION:
+        return False
+    required = {"inputs", "annual", "arrival", "baseline_arrival", "receptivity",
+                "p_receipt", "receipt_probability_history", "seeds", "model_note"}
+    required_inputs = {"initial_annual_infectious_transports", "scale_transport_with_burden",
+                       "include_nidi_as_origins", "horizon", "mode", "random_seed",
+                       "receipt_cutoff", "receptivity_cutoff", "landscape_mode"}
+    return (required.issubset(result) and isinstance(result["inputs"], dict)
+            and required_inputs.issubset(result["inputs"])
+            and isinstance(result["annual"], list) and bool(result["annual"])
+            and all(isinstance(row, dict) and {"annual_infectious_transport_mean",
+                    "expected_detected_transports", "year", "baseline", "reached", "added"}.issubset(row)
+                    for row in result["annual"]))
 
 
 def county_table(result, year=None):
@@ -177,10 +206,12 @@ def controls():
                   random_seed=seed, landscape_mode="rebuild", scale_transport_with_burden=scale,
                   include_nidi_as_origins=feedback,
                   **dict(zip(SPEED_KEYS, speeds)))
-    if applied or "result" not in st.session_state or st.session_state.result.get("model_revision") != MODEL_REVISION:
+    if "result" in st.session_state and not current_result(st.session_state.result):
+        del st.session_state.result
+    if applied or "result" not in st.session_state:
         try:
             with st.spinner("Calculating county spread…"):
-                result = calculate(params)
+                result = calculate(params, MODEL_REVISION)
             st.session_state.result = result
             st.session_state.map_year = horizon
             st.session_state.pop("scenario_error", None)
