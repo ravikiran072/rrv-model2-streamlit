@@ -1,0 +1,48 @@
+{
+  "holdout_results": [
+    {
+      "model": "existing_forest",
+      "n_features": 13,
+      "n": 72,
+      "R2": 0.27704334932521946,
+      "RMSE": 0.20875806284230827,
+      "MAE": 0.16816407546564996,
+      "bias": -0.05165284812581321
+    },
+    {
+      "model": "sewershed_added",
+      "n_features": 14,
+      "n": 72,
+      "R2": 0.3062141582976655,
+      "RMSE": 0.20450307656673253,
+      "MAE": 0.16443834507251526,
+      "bias": -0.05347666964009472
+    }
+  ],
+  "training_tuning": [
+    {
+      "model": "existing_forest",
+      "selected_parameters": {
+        "max_features": 0.5,
+        "min_samples_leaf": 2
+      },
+      "mean_random_CV_RMSE": 0.22439338375226656
+    },
+    {
+      "model": "sewershed_added",
+      "selected_parameters": {
+        "max_features": 0.5,
+        "min_samples_leaf": 2
+      },
+      "mean_random_CV_RMSE": 0.22613946092289083
+    }
+  ],
+  "software": {
+    "python": "3.12.14",
+    "numpy": "2.3.5",
+    "pandas": "2.2.3",
+    "sklearn": "1.8.0"
+  },
+  "validation_design": "Fixed original 72-county random holdout; random folds for training-only tuning; no geographic criterion in formal method",
+  "development_limit": "Reused holdout after prior development, not new independent test"
+}

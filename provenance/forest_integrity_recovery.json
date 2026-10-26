@@ -1,0 +1,27 @@
+{
+  "original_saved_forest_sha256": "68e2564d95f6a06f02999a7c52cff12db17de9a92ec6159b98d1722ae1c7252a",
+  "expected_saved_forest_sha256": "71c83708dfa07a78d49d852a8a4f65a0c56bb28c99146a122aed33476e8101c2",
+  "rebuilt_forest_sha256": "5f13b37eff60f3338c211101635c4ef0c63ab997a51d12552dce25a2fc0335d4",
+  "all_715_saved_predictions_reproduced_max_absolute_difference": 1.1102230246251565e-16,
+  "exact_settings": {
+    "bootstrap": true,
+    "ccp_alpha": 0.0,
+    "criterion": "squared_error",
+    "max_depth": null,
+    "max_features": 0.5,
+    "max_leaf_nodes": null,
+    "max_samples": null,
+    "min_impurity_decrease": 0.0,
+    "min_samples_leaf": 2,
+    "min_samples_split": 2,
+    "min_weight_fraction_leaf": 0.0,
+    "monotonic_cst": null,
+    "n_estimators": 500,
+    "n_jobs": 1,
+    "oob_score": false,
+    "random_state": 20261026,
+    "verbose": 0,
+    "warm_start": false
+  },
+  "new_model_specification": false
+}

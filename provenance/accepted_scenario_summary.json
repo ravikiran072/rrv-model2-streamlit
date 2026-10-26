@@ -1,0 +1,90 @@
+{
+  "rate_rule": "annual infectious transport mean=20*(counties reached at start of year/877); expected detected mean=.2*(same ratio)",
+  "burden_proxy": "Number of counties reached, assuming unchanged average rabies burden per reached county; not a direct case-count forecast",
+  "annual_timing": "Start-of-year county count and origin eligibility only. Counties established during a year contribute in the following year. Natural and previous translocation-driven spread both included.",
+  "previous_fixed_rate": {
+    "baseline_count": 1917,
+    "reached": 1935,
+    "added": 18,
+    "nidi": 2
+  },
+  "burden_scaled": {
+    "baseline_count": 1917,
+    "reached": 2006,
+    "added": 89,
+    "nidi": 5
+  },
+  "nidi": [
+    {
+      "index": 149,
+      "year": 9,
+      "p_receipt": 0.5493,
+      "receptivity": 0.8911,
+      "FIPS": "05119",
+      "county": "Pulaski County",
+      "state": "AR"
+    },
+    {
+      "index": 3017,
+      "year": 10,
+      "p_receipt": 0.522,
+      "receptivity": 0.8476,
+      "FIPS": "55057",
+      "county": "Juneau County",
+      "state": "WI"
+    },
+    {
+      "index": 1470,
+      "year": 12,
+      "p_receipt": 0.5072,
+      "receptivity": 0.8641,
+      "FIPS": "29183",
+      "county": "St. Charles County",
+      "state": "MO"
+    },
+    {
+      "index": 1461,
+      "year": 17,
+      "p_receipt": 0.5243,
+      "receptivity": 0.8444,
+      "FIPS": "29095",
+      "county": "Jackson County",
+      "state": "MO"
+    },
+    {
+      "index": 2922,
+      "year": 17,
+      "p_receipt": 0.5268,
+      "receptivity": 0.8143,
+      "FIPS": "53033",
+      "county": "King County",
+      "state": "WA"
+    }
+  ],
+  "year20_transport_mean": 44.60661345496008,
+  "year20_endemic_counties_at_start": 1956,
+  "year20_expected_detected_mean": 0.44606613454960087,
+  "sum20_annual_transport_means": 649.5553021664765,
+  "previous_sum20_means": 400,
+  "analytic": {
+    "baseline_count": 1917,
+    "reached": 2014,
+    "added": 97,
+    "nidi": 5
+  },
+  "fixed_rate_regression_exact": true,
+  "checks": {
+    "all_annual_rates_match_formula": true,
+    "first_year_rate20": true,
+    "start_of_year_count_equals_prior_year_end": true,
+    "baseline_unchanged": true,
+    "scenario_not_later_than_natural_baseline": true
+  },
+  "newly_reached_vs_fixed_rate": 71,
+  "no_longer_reached_vs_fixed_rate": 0,
+  "forest_habitat_cutoff": 0.7928484500378316,
+  "habitat_and_water_and_route_network": "Unchanged from final habitat integration",
+  "simulation_interpretation": "County count is a burden proxy with constant average burden per reached county. Frontier and nidus decisions are shared scenario-level states; delivery histories are sampled conditional on this state.",
+  "short_route_assignment_policy": "Existing zero-destination short-haul origins retained; no new renormalization",
+  "website_finalized": false
+}

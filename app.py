@@ -1,4 +1,4 @@
-"""Launch the Model 2 website: python app.py (requires NumPy)."""
+"""Launch the Model 2 website: python app.py (requires NumPy and SciPy)."""
 import argparse
 import os
 import threading

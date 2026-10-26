@@ -1,73 +1,26 @@
 {
   "model": "Final Model 2",
-  "website_version": "2026-10-26",
-  "source_package": "RRV_Westbound_Water_Onward_Model_2026-10-09.zip",
-  "runtime_data": {
-    "model_data.npz": {
-      "sha256": "b8be25f23a5b1f266f7e9f579889d60e4fc32ab8e9a42ace5816ee904c2434e7",
-      "arrays": {
-        "short": {
-          "shape": [
-            20,
-            3096
-          ],
-          "dtype": "float32"
-        },
-        "long": {
-          "shape": [
-            20,
-            3096
-          ],
-          "dtype": "float32"
-        },
-        "travel": {
-          "shape": [
-            827,
-            3096
-          ],
-          "dtype": "float32"
-        },
-        "road_global": {
-          "shape": [
-            827
-          ],
-          "dtype": "int32"
-        },
-        "baseline": {
-          "shape": [
-            3096
-          ],
-          "dtype": "float64"
-        },
-        "receptivity": {
-          "shape": [
-            3096
-          ],
-          "dtype": "float32"
-        }
-      }
-    },
-    "county_names.json": {
-      "sha256": "912feef4c13fb7b7daece01c044de4f5124c8fd7f2737ae49736be5d75955e4a"
-    },
-    "counties.svg": {
-      "sha256": "0e3f868da3a537f82b04727f12372cb612b9816e66b7854c8cbfb0c32068e30c"
-    },
-    "landscape_data.npz": {
-      "sha256": "7f241b7b28cd7aa88ce84fb1eeb95d2cb93e8b2b146d43a0d5d455a5f79ae130"
-    },
-    "route_kernels.npz": {
-      "sha256": "7575a2aa1126cfc5354af95c908723ff1eca0ddc562318184b532103ab7e784d"
-    }
+  "version": "2026-10-26",
+  "habitat": "14-predictor forest including EPA sewershed coverage; 715 fitting counties; 72 fixed random holdout counties",
+  "score": "Predicted 1 - P(free); used for white-to-hue shading in every county, including unreached counties",
+  "colors": {
+    "unreached": "#a6b2bb",
+    "initial": "#438bb5",
+    "main_front": "#e7a13e",
+    "nidus_front": "#cf704b"
   },
-  "upstream_array_sources": {
-    "short,long": "scenarios/assumption_review_2026_10_09/annual_destination_intensity_per_event.npz",
-    "baseline": "reconstruction/translocation_routing_objects.npz:baseline_arrival",
-    "road_global,travel": "water_reconstruction/road_prop_years.npz",
-    "receptivity": "reconstruction/county_metadata.json:predicted_receptivity (float32; null becomes NaN)"
+  "default_reference": {
+    "initial_counties": 877,
+    "natural_only_year20": 1917,
+    "reached_year20": 2006,
+    "additional_year20": 89,
+    "independent_nidi": 5
   },
+  "default_receptivity_cutoff": 0.7928484500378316,
+  "burden_scaling": "Annual transport mean = 20 * start-of-year reached county count / 877",
+  "origin_feedback": "Earlier nidi and their spread contribute origins beginning the next year",
+  "source_hue": "Earliest arrival source, relative to natural-only counterfactual",
   "coordinate_reference_system": "EPSG:5070",
-  "geometry_source": "accepted/county_arrival_p50_recept50.gpkg; county_arrival table; geometry rounded to map pixel coordinates",
   "network": {
     "source_url": "https://www2.census.gov/geo/tiger/TIGER2024/PRIMARYROADS/tl_2024_us_primaryroads.zip",
     "source_sha256": "10ecc0a5978ac8f7cda970e85c150663b6f08d76bc7cab644975128b7be5c98c",
@@ -161,7 +114,6 @@
     "note": "Route and weighting assumptions are reconstruction choices, not verified archived parameters"
   },
   "water": {
-    "status": "new reconstruction, not the archived propagation matrix",
     "grid_meters": 10000,
     "speed_miles_per_year": {
       "No/very low": 0.0,
@@ -185,9 +137,7 @@
       462,
       291
     ],
-    "traversable_nodes": 73389,
     "unrepresented_counties_nearest_cell_proxy": 14,
-    "graph_edges": 283757,
     "river_penalized_edges": 5967,
     "lake_blocked_edges": 558,
     "sandusky_local_bridge_connector": {
@@ -201,59 +151,163 @@
       "travel_time_years": 2.311415488652014,
       "river_crossings": 0,
       "road_segments": 473
-    },
-    "matrix_shape": [
-      827,
-      3096
-    ],
-    "baseline_validation": {
-      "n_accepted_baseline_y0": 877,
-      "n_initial_grid_nodes": 12291,
-      "n_counties_compared": 1957,
-      "baseline_median_difference_years": -1.4436284228857303,
-      "baseline_median_absolute_error_years": 1.5061656698207884,
-      "baseline_mean_absolute_error_years": 1.931363886953099,
-      "baseline_counties_by_year_20_accepted": 1358,
-      "baseline_counties_by_year_20_rebuilt": 1373
     }
   },
+  "domain": "Original 3096-county contiguous-US domain; Connecticut absent; 877 initial counties preserved",
+  "habitat_provenance": "provenance/habitat_forest_metadata.json; habitat_validation_results.json; habitat_integration_summary.json; forest_integrity_recovery.json",
+  "category_boundaries": [
+    0.24486813213420025,
+    0.5095631060642827,
+    0.7285916753577419
+  ],
+  "category_boundary_note": "Reconstructed midpoints reproduce all original county class labels; original exact cutpoints were not archived",
   "runtime": "Python 3.12; NumPy 2.3.5; SciPy 1.17.0",
-  "algorithm": "Annual Poisson-thinned binomial first-receipt counts or direct Poisson probabilities; strict probability and receptivity cutoffs; preemption and next-year outward propagation.",
-  "editable_landscape": {
-    "original_nodes": 73389,
-    "expanded_nodes": 77414,
-    "undirected_edges": 302915,
-    "additional_no_very_low_cells": 4025,
-    "water_features": {
-      "rivers": 46,
-      "lakes": 150
+  "runtime_data": {
+    "model_data.npz": {
+      "sha256": "e775fe3aee4d80b7121a1a4344867abd9260dcca0dd0077ceaadce23a1931535",
+      "arrays": {
+        "road_global": {
+          "shape": [
+            827
+          ],
+          "dtype": "int32"
+        },
+        "receptivity": {
+          "shape": [
+            3096
+          ],
+          "dtype": "float64"
+        }
+      }
     },
-    "original_graph_check": "All original default-speed edges retained with original weights; baseline array and two reference-seed travel arrays reproduce upstream arrays exactly.",
-    "activation": "A category assigned speed 0 is blocked; positive speed activates its dry cells. Diagonal corner rules and river/lake resistance retained.",
-    "baseline_modes": {
-      "reference": "archived arrivals; fixed default speeds; saved annual route intensity",
-      "rebuild": "shortest-time paths from year-zero counties; variable speeds; annual origin kernels recomputed"
+    "landscape_data.npz": {
+      "sha256": "0e0f0580197beb02ff9582effe2b9fcccea1d5edc4f1c38181c2d089fd007210",
+      "arrays": {
+        "node_xy": {
+          "shape": [
+            77414,
+            2
+          ],
+          "dtype": "float64"
+        },
+        "node_county": {
+          "shape": [
+            77414
+          ],
+          "dtype": "int32"
+        },
+        "county_class": {
+          "shape": [
+            3096
+          ],
+          "dtype": "int8"
+        },
+        "county_center_xy": {
+          "shape": [
+            3096,
+            2
+          ],
+          "dtype": "float64"
+        },
+        "edge_u": {
+          "shape": [
+            302915
+          ],
+          "dtype": "int32"
+        },
+        "edge_v": {
+          "shape": [
+            302915
+          ],
+          "dtype": "int32"
+        },
+        "corner1": {
+          "shape": [
+            302915
+          ],
+          "dtype": "int64"
+        },
+        "corner2": {
+          "shape": [
+            302915
+          ],
+          "dtype": "int64"
+        },
+        "effective_miles": {
+          "shape": [
+            302915
+          ],
+          "dtype": "float64"
+        },
+        "initial_county": {
+          "shape": [
+            3096
+          ],
+          "dtype": "bool"
+        },
+        "original_nodes": {
+          "shape": [],
+          "dtype": "int64"
+        },
+        "original_origin_nodes": {
+          "shape": [
+            3096
+          ],
+          "dtype": "int32"
+        }
+      }
     },
-    "preparation_script": "provenance/build_editable_landscape.py",
-    "preparation_script_sha256": "076cba87a1b2061257adc6c69d615b5a5de326fc8f1908d4084cb962d59e2df9"
-  },
-  "habitat_model": {
-    "document_source": "provenance/methods_summary_bachelors_level.txt",
-    "source_sha256": "ca9c2174c1c6a9a35f3455e9a48ae236eb4287be0c06d203182b9152dc4b557c",
-    "target": "1 minus 2024 county probability of freedom from multi-year NRSS data",
-    "model": "Random Forest",
-    "predictors": "11 NLCD land-cover variables, latitude, ln(human population density + 1)",
-    "development_counties": 974,
-    "holdout_fraction": 0.1,
-    "prediction_counties": 3096,
-    "not_recovered": [
-      "exact predictor names and vintages",
-      "training/prediction covariate tables",
-      "preprocessing and exclusions",
-      "forest settings/fitted model",
-      "split seed and holdout counties",
-      "validation results",
-      "category boundary rule"
-    ]
+    "route_kernels.npz": {
+      "sha256": "7575a2aa1126cfc5354af95c908723ff1eca0ddc562318184b532103ab7e784d",
+      "arrays": {
+        "short": {
+          "shape": [
+            827,
+            3096
+          ],
+          "dtype": "float64"
+        },
+        "long": {
+          "shape": [
+            827,
+            3096
+          ],
+          "dtype": "float64"
+        },
+        "road_global": {
+          "shape": [
+            827
+          ],
+          "dtype": "int32"
+        },
+        "exposure": {
+          "shape": [
+            827
+          ],
+          "dtype": "float64"
+        },
+        "long_capable": {
+          "shape": [
+            827
+          ],
+          "dtype": "bool"
+        }
+      }
+    },
+    "county_names.json": {
+      "sha256": "bc20a3ae489bae40f0007e7d5e25ff65d5d80286349cc0caaf5a7066dc662cc3"
+    },
+    "counties.svg": {
+      "sha256": "0ad20ac5eef2e0c22d845eb496f3699da02ba14d9a536581ec0cf569f83aaaac"
+    },
+    "map_style.js": {
+      "sha256": "20442af827ba5b5fc3acc2c19ce6b15a3a87055b6ca41e4b6c74f428f2ef7865"
+    },
+    "provenance/final_habitat_forest_715.joblib": {
+      "sha256": "5f13b37eff60f3338c211101635c4ef0c63ab997a51d12552dce25a2fc0335d4"
+    },
+    "provenance/accepted_scenario_reference.json": {
+      "sha256": "ea6610a9196afbf0ce54e010a3253ca1401fe64a43036da16f5aa38c9b720d03"
+    }
   }
 }

@@ -1,0 +1,50 @@
+{
+  "preferred_specification": "14-predictor sewer-augmented random forest",
+  "final_training_n": 715,
+  "formal_validation_training_n": 643,
+  "formal_holdout_n": 72,
+  "tuning": "5-fold random KFold on 643 only; seed 20261027",
+  "features": [
+    "lc_open_water",
+    "lc_developed",
+    "lc_barren",
+    "lc_deciduous_forest",
+    "lc_evergreen_forest",
+    "lc_mixed_forest",
+    "lc_shrub_scrub",
+    "lc_grassland",
+    "lc_pasture_hay",
+    "lc_cultivated_crops",
+    "lc_wetlands",
+    "latitude",
+    "log1p_human_density",
+    "mapped_sewershed_coverage_pct"
+  ],
+  "selected_parameters": {
+    "max_features": 0.5,
+    "min_samples_leaf": 2
+  },
+  "all_estimator_parameters": {
+    "bootstrap": true,
+    "ccp_alpha": 0.0,
+    "criterion": "squared_error",
+    "max_depth": null,
+    "max_features": 0.5,
+    "max_leaf_nodes": null,
+    "max_samples": null,
+    "min_impurity_decrease": 0.0,
+    "min_samples_leaf": 2,
+    "min_samples_split": 2,
+    "min_weight_fraction_leaf": 0.0,
+    "monotonic_cst": null,
+    "n_estimators": 500,
+    "n_jobs": 1,
+    "oob_score": false,
+    "random_state": 20261026,
+    "verbose": 0,
+    "warm_start": false
+  },
+  "validation_models": "formal_random_validation/*_trained_on_643.joblib",
+  "final_model_sha256": "71c83708dfa07a78d49d852a8a4f65a0c56bb28c99146a122aed33476e8101c2",
+  "downstream_changed": false
+}

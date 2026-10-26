@@ -1,0 +1,23 @@
+{
+  "model": "Final Model 2",
+  "version": "2026-10-26",
+  "habitat": "14-predictor forest including EPA sewershed coverage; 715 fitting counties; 72 fixed random holdout counties",
+  "score": "Predicted 1 - P(free); used for white-to-hue shading in every county, including unreached counties",
+  "colors": {
+    "unreached": "#a6b2bb",
+    "initial": "#438bb5",
+    "main_front": "#e7a13e",
+    "nidus_front": "#cf704b"
+  },
+  "default_reference": {
+    "initial_counties": 877,
+    "natural_only_year20": 1917,
+    "reached_year20": 2006,
+    "additional_year20": 89,
+    "independent_nidi": 5
+  },
+  "default_receptivity_cutoff": 0.7928484500378316,
+  "burden_scaling": "Annual transport mean = 20 * start-of-year reached county count / 877",
+  "origin_feedback": "Earlier nidi and their spread contribute origins beginning the next year",
+  "source_hue": "Earliest arrival source, relative to natural-only counterfactual"
+}

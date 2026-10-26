@@ -22,7 +22,7 @@ FIELDS = {
     "observed_event_interval", "detection_probability", "establishment_probability",
     "receptivity_cutoff", "receipt_cutoff", "long_haul_share", "long_haul_distance",
     "route_scope", "origin_destination_weights", "spread_speed", "water_barriers",
-    "event_timing", "new_source_feedback",
+    "event_timing", "new_source_feedback", "burden_scaling",
 }
 
 
@@ -64,6 +64,8 @@ class Handler(BaseHTTPRequestHandler):
         path = urlsplit(self.path).path
         files = {"/": ("index.html", "text/html; charset=utf-8"),
                  "/app.js": ("app.js", "text/javascript; charset=utf-8"),
+                 "/map_style.js": ("map_style.js", "text/javascript; charset=utf-8"),
+                 "/model_info.json": ("model_info.json", "application/json; charset=utf-8"),
                  "/styles.css": ("styles.css", "text/css; charset=utf-8"),
                  "/methods.html": ("methods.html", "text/html; charset=utf-8"),
                  "/counties.svg": ("counties.svg", "image/svg+xml"),

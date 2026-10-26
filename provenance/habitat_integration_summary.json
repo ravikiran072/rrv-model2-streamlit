@@ -1,0 +1,49 @@
+{
+  "forest": "Preferred14-predictor final sewer-inclusive forest refitted on715 counties",
+  "forest_sha256": "5f13b37eff60f3338c211101635c4ef0c63ab997a51d12552dce25a2fc0335d4",
+  "counties": 3096,
+  "year0_counties": 877,
+  "year0_median_receptivity_cutoff": 0.7928484500378316,
+  "previous_cutoff": 0.7050952593606139,
+  "class_labels": [
+    "No/very low",
+    "Low",
+    "Moderate",
+    "High"
+  ],
+  "class_boundaries_reconstructed_midpoints": [
+    0.24486813213420025,
+    0.5095631060642827,
+    0.7285916753577419
+  ],
+  "archived_boundary_identification_intervals": [
+    [
+      0.2446480454927159,
+      0.2450882187756846
+    ],
+    [
+      0.509254259951129,
+      0.5098719521774362
+    ],
+    [
+      0.728430182110847,
+      0.7287531686046369
+    ]
+  ],
+  "all3096_old_labels_reproduced": true,
+  "new_predictions_inside_boundary_identification_intervals": 5,
+  "updated_class_counts": {
+    "Low": 1435,
+    "Moderate": 825,
+    "High": 772,
+    "No/very low": 64
+  },
+  "changed_class_count": 1220,
+  "overlapping_fitting_counties": 707,
+  "all707_overlapping_predictors_match_final_training_inputs": true,
+  "national_predictions_with_any_feature_outside_training_range": 1171,
+  "sewer_geometry_repairs": 479,
+  "sewer_zero_mapped_count": 26,
+  "geography": "Original3096 contiguous-US domain; Connecticut remains absent as in original spread files",
+  "class_boundary_note": "Exact old numerical class breaks not archived. Each retained cut is midpoint between adjacent archived class score ranges; all original assignments reproduced. Speeds0/10/25/50mi per year retained."
+}

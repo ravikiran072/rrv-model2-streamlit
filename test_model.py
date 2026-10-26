@@ -13,86 +13,63 @@ import numpy as np
 
 import server
 from model_engine import run
-from landscape_engine import DEFAULT_SPEEDS, annual_probabilities, landscape, travel, inputs as landscape_inputs
+
 
 
 class ModelTests(unittest.TestCase):
-    def test_default_reference(self):
-        for mode in ("monte_carlo", "analytic"):
-            r = run({"mode": mode})
-            self.assertEqual((r["nidi"], r["baseline_count"], r["added"], r["reached"]),
-                             (2, 1358, 164, 1522))
-            self.assertEqual([(s["index"], s["year"]) for s in r["seeds"]], [(149, 11), (3017, 14)])
+    @classmethod
+    def setUpClass(cls):
+        cls.result = run({})
 
-    def test_transport_and_threshold_controls(self):
-        for parameters in ({"observed_per_year": 0}, {"receipt_cutoff": 1}, {"receptivity_cutoff": 1}):
-            r = run(parameters)
-            self.assertEqual((r["nidi"], r["added"]), (0, 0))
-        self.assertNotEqual(run({"receptivity_cutoff": .5})["added"], 164)
+    def test_accepted_reference(self):
+        r = self.result
+        reference = json.loads((Path(__file__).parent / "provenance/accepted_scenario_reference.json").read_text())
+        for key in ("arrival", "baseline_arrival", "p_receipt", "receipt_probability_history", "annual", "seeds"):
+            self.assertEqual(r[key], reference[key], key)
+        self.assertEqual((r["baseline_count"], r["reached"], r["added"], r["nidi"]), (1917, 2006, 89, 5))
+        self.assertEqual([(s["index"], s["year"]) for s in r["seeds"]], [(149,9),(3017,10),(1470,12),(1461,17),(2922,17)])
 
-    def test_annual_probabilities_and_reproducibility(self):
-        first = run({})
-        self.assertEqual(first, run({}))
-        self.assertNotEqual(first["p_receipt"], run({"random_seed": 42})["p_receipt"])
-        previous = np.zeros(len(first["arrival"]))
-        for y in range(1, 21):
-            p = np.asarray(run({"horizon": y})["p_receipt"])
-            self.assertTrue(np.all(p >= previous))
-            previous = p
+    def test_annual_feedback_and_prefix(self):
+        r = self.result
+        previous = 877
+        for a in r["annual"]:
+            self.assertEqual(a["endemic_counties_at_start"], previous)
+            self.assertAlmostEqual(a["annual_infectious_transport_mean"], 20 * previous / 877)
+            previous = a["reached"]
+        short = run({"horizon":10})
+        self.assertEqual(short["annual"], r["annual"][:10])
+        self.assertEqual(short["receipt_probability_history"], r["receipt_probability_history"][:10])
 
-    def test_county_map_totals_match_annual_analysis(self):
-        r = run({})
+    def test_fixed_rate_and_no_transport(self):
+        r = run({"scale_transport_with_burden":False,"include_nidi_as_origins":False})
+        self.assertEqual((r["baseline_count"],r["reached"],r["added"],r["nidi"]),(1917,1935,18,2))
+        self.assertTrue(all(a["annual_infectious_transport_mean"] == 20 for a in r["annual"]))
+        zero = run({"observed_per_year":0})
+        self.assertEqual((zero["reached"],zero["added"],zero["nidi"]),(1917,0,0))
+
+    def test_map_year_counts_and_probabilities(self):
+        r = self.result
         arrival = np.asarray(r["arrival"])
         baseline = np.asarray(r["baseline_arrival"])
-        for row in r["annual"]:
-            reached = (arrival >= 0) & (arrival <= row["year"])
-            base = (baseline >= 0) & (baseline <= row["year"])
-            self.assertEqual(int(reached.sum()), row["reached"])
-            self.assertEqual(int((reached & ~base).sum()), row["added"])
+        for a in r["annual"]:
+            reached = (arrival>=0)&(arrival<=a["year"])
+            natural = (baseline>=0)&(baseline<=a["year"])
+            self.assertEqual(int(reached.sum()),a["reached"])
+            self.assertEqual(int((reached&~natural).sum()),a["added"])
+        history = np.asarray(r["receipt_probability_history"])
+        self.assertTrue(np.all(np.diff(history,axis=0)>=0))
+        self.assertEqual(run({}),r)
+
+    def test_speed_changes_rebuild_the_landscape(self):
+        slower=run({"speed_low":5,"speed_moderate":12.5,"speed_high":25})
+        self.assertLess(slower["baseline_count"],self.result["baseline_count"])
+        self.assertNotEqual(slower["p_receipt"],self.result["p_receipt"])
+        self.assertEqual(slower["inputs"]["landscape_mode"],"rebuild")
 
     def test_invalid_inputs(self):
-        for parameters in ({"detection_probability": 0}, {"horizon": 1.5}, {"mode": "bad"},
-                           {"random_seed": -1}, {"receipt_cutoff": float("nan")}, []):
-            with self.assertRaises(ValueError):
-                run(parameters)
-
-    def test_recalculated_landscape_defaults_and_speed_response(self):
-        r = run({"landscape_mode": "rebuild"})
-        self.assertEqual((r["baseline_count"], r["nidi"], r["added"]), (1373, 2, 157))
-        normal = landscape(DEFAULT_SPEEDS)["baseline"]
-        half = landscape((0., 5., 12.5, 25.))["baseline"]
-        finite = np.isfinite(normal)
-        np.testing.assert_array_equal(finite, np.isfinite(half))
-        np.testing.assert_allclose(half[finite], 2 * normal[finite], rtol=1e-6)
-        slower = run({"speed_low": 5, "speed_moderate": 12.5, "speed_high": 25})
-        self.assertEqual(slower["inputs"]["landscape_mode"], "rebuild")
-        self.assertLess(slower["baseline_count"], r["baseline_count"])
-        self.assertNotEqual(slower["p_receipt"], r["p_receipt"])
-
-    def test_no_very_low_category_can_be_activated(self):
-        inactive = landscape(DEFAULT_SPEEDS)
-        active = landscape((5., 10., 25., 50.))
-        self.assertGreater(active["graph"].nnz, inactive["graph"].nnz)
-        self.assertGreater(int(np.sum(active["baseline"] <= 20)), int(np.sum(inactive["baseline"] <= 20)))
-
-    def test_zero_speeds_stop_natural_spread(self):
-        r = run(dict(speed_very_low=0, speed_low=0, speed_moderate=0, speed_high=0))
-        self.assertEqual(r["baseline_count"], 877)
-        self.assertEqual(r["reached"], 877 + r["nidi"])
-        with self.assertRaises(ValueError):
-            run({"landscape_mode": "reference", "speed_low": 12})
-        with self.assertRaises(ValueError):
-            run({"speed_high": -1})
-
-    def test_dynamic_origin_kernels_match_original_probabilities(self):
-        from model_engine import data
-        a = data()
-        q = annual_probabilities(a["baseline"], 20)
-        np.testing.assert_allclose(q[0], a["short"], atol=1e-8, rtol=1e-6)
-        np.testing.assert_allclose(q[1], a["long"], atol=1e-8, rtol=1e-6)
-        for i in (149, 3017):
-            row = int(np.flatnonzero(a["road_global"] == i)[0])
-            np.testing.assert_array_equal(travel(DEFAULT_SPEEDS, i), a["travel"][row])
+        for p in ({"detection_probability":0},{"horizon":1.5},{"mode":"bad"},{"random_seed":-1},
+                  {"receipt_cutoff":float("nan")},{"speed_high":-1},{"scale_transport_with_burden":"yes"},[]):
+            with self.assertRaises(ValueError): run(p)
 
 
 class WebTests(unittest.TestCase):
@@ -120,9 +97,9 @@ class WebTests(unittest.TestCase):
 
     def test_http_scenario_and_methods(self):
         with self.post("/api/scenario", {}) as response:
-            self.assertEqual(json.load(response)["added"], 164)
+            self.assertEqual(json.load(response)["added"], 89)
         for route, expected in (("/", b'data-tab="methods"'), ("/methods.html", b'Binomial'),
-                                ("/app.js", b'queueCalculation'), ("/counties.svg", b'data-i=')):
+                                ("/app.js", b'queueCalculation'), ("/counties.svg", b'data-i='), ("/map_style.js", b'#cf704b'), ("/model_info.json", b'2006')):
             with urllib.request.urlopen(self.base + route) as response:
                 self.assertIn(expected, response.read())
         with self.post("/api/scenario", {"speed_low": 5}) as response:

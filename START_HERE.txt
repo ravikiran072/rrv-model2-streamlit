@@ -17,5 +17,8 @@ See README.md for deployment and expert-response storage instructions.
 The original interface is still available with: python app.py
 
 UPDATED OCTOBER 26
-All four habitat-category speeds are editable. A speed edit switches to Recalculate from year 0. For speed comparisons, use recalculated mode for both runs.
-The Model methods tab now documents the recovered habitat Random Forest derivation and explains both focus thresholds with examples.
+Updated habitat model includes EPA sewershed coverage. Annual transports scale
+with reached-county burden and earlier nidi contribute transport origins.
+Every scenario recalculates the landscape from year zero. Default year 20:
+2,006 reached counties; 1,917 natural-only; 89 additional; 5 independent nidi.
+The map uses source colors, white-to-hue habitat shading, and nidus stars.
