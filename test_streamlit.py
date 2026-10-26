@@ -72,6 +72,7 @@ class StreamlitTests(unittest.TestCase):
             self.assertEqual(saved, payload["inputs"])
 
     def test_map_and_county_download_consistency(self):
+        import base64
         from streamlit_app import county_table, map_svg, county_names
         result = self.app.session_state.result
         frame = county_table(result)
@@ -81,6 +82,14 @@ class StreamlitTests(unittest.TestCase):
         paths = list(root.iter("{http://www.w3.org/2000/svg}path"))
         self.assertEqual(len(paths), len(county_names()))
         self.assertEqual(sum(p.attrib["fill"] == "#a94932" for p in paths), 2)
+        # Check the actual UI output, since valid SVG alone cannot catch HTML
+        # sanitization removing a map in the visitor's browser.
+        images = self.app.get("imgs")
+        self.assertEqual(len(images), 1)
+        url = images[0].proto.imgs[0].url
+        self.assertTrue(url.startswith("data:image/svg+xml;base64,"))
+        displayed = ET.fromstring(base64.b64decode(url.split(",", 1)[1]))
+        self.assertEqual(len(list(displayed.iter("{http://www.w3.org/2000/svg}path"))), len(paths))
 
 
 if __name__ == "__main__":

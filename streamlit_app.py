@@ -149,8 +149,10 @@ def scenario_view(result):
     c.metric("Additional counties", f'{row["added"]:,}')
     d.metric("Independent foci to this year", sum(s["year"] <= year for s in result["seeds"]))
     svg = map_svg(result, year)
-    st.html(svg)
-    st.caption("Hover over a county for its name. Use the county selector below for detailed results. Receipt probabilities refer to the full scenario horizon.")
+    # st.html's HTML-only sanitizer removes SVG elements in Streamlit 1.56.
+    # The image renderer accepts SVG strings and preserves the county paths.
+    st.image(svg, width="stretch")
+    st.caption("Use the county selector below for names and detailed results. Receipt probabilities refer to the full scenario horizon.")
     names = county_names()
     county = st.selectbox("Inspect a county", sorted(range(len(names)), key=lambda i: (names[i]["state"], names[i]["name"])),
                           format_func=lambda i: f'{names[i]["name"]}, {names[i]["state"]}')
