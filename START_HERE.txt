@@ -1,0 +1,21 @@
+FINAL MODEL 2 WEBSITE
+
+1. Install Python 3.12 if needed.
+2. Open a terminal in this extracted folder.
+3. Run: python -m pip install -r requirements.txt
+4. Run: python -m streamlit run streamlit_app.py
+
+The browser opens automatically. Edit inputs and click Apply scenario to refresh.
+Open the Model methods tab to read the model description.
+Keep the terminal open. Press Ctrl+C to stop the website.
+On Windows, py can replace python. See README.md for more instructions.
+
+PUBLIC HOSTING
+Upload the project to GitHub. On Streamlit Community Cloud, select
+streamlit_app.py as the main file and Python 3.12 in advanced settings.
+See README.md for deployment and expert-response storage instructions.
+The original interface is still available with: python app.py
+
+UPDATED OCTOBER 26
+All four habitat-category speeds are editable. A speed edit switches to Recalculate from year 0. For speed comparisons, use recalculated mode for both runs.
+The Model methods tab now documents the recovered habitat Random Forest derivation and explains both focus thresholds with examples.

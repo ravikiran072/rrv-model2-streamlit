@@ -1,0 +1,28 @@
+Methods Summary
+
+We developed a spatial model to estimate how a novel raccoon population could expand across the contiguous United States through a combination of natural landscape spread and human-mediated translocation. The model was designed to represent two different processes: gradual movement through suitable habitat and occasional long-distance movement associated with trucks traveling along major highway corridors.
+
+Habitat receptivity
+
+County-level habitat receptivity was estimated using a Random Forest model. The outcome used to train the model was derived from the 2024 county probability-of-freedom estimates, an established public-health rabies risk-assessment method based on multi-year National Rabies Surveillance System testing and detection data. Habitat receptivity was defined as 1 − P(free). Predictors included 11 National Land Cover Database land-cover variables, latitude, and the natural logarithm of human population density plus one. The model was developed using 974 counties with suitable observed data and evaluated using a fixed 10% holdout sample. Predictions were then extrapolated to 3,096 counties in the contiguous United States.
+
+Predicted receptivity was grouped into four landscape classes. Natural spread rates were assigned as 0, 10, 25, and 50 miles/year for no/very-low, low, moderate, and high receptivity, respectively. Spread was modeled on a 10-km spatial grid using accumulated travel time rather than assuming that an entire county became occupied immediately when its border was reached. Major rivers increased travel time fourfold, large lakes were treated as barriers, and wetlands remained available habitat.
+
+Human-mediated translocation
+
+Long-distance translocation was modeled separately using Monte Carlo simulation. The current scenario represents a 10-fold increase in translocation pressure relative to the initial model, with the number of translocation events in each year drawn from a Poisson distribution with a mean of 25 events/year. Thus, individual 20-year simulations do not contain exactly the same number of events, but average approximately 500 events.
+
+Truck movement was restricted to an Interstate-corridor network. Sixty percent of simulated events were defined as long-haul movements, requiring an actual routed distance of at least 750 miles. The remaining 40% represented shorter movements. Long-haul distances extended beyond 2,000 miles, allowing occasional cross-country movements.
+
+We ran 10,000 independent 20-year simulations. For each county and analysis year, we calculated the proportion of simulations in which the county received at least one translocated raccoon. This produced a cumulative county-level probability of translocation.
+
+Defining expansion events
+
+A county was considered eligible to initiate a new population when two criteria were met:
+
+1. the cumulative probability of receiving at least one translocated raccoon exceeded 50%, and
+2. predicted habitat receptivity exceeded 50%.
+
+A county was only considered a new expansion seed if natural landscape spread had not already reached it. The first year in which both criteria were satisfied was assigned as the translocation-seed year. Natural spread was then initiated from that county using the same 10-km landscape model, habitat-specific movement rates, river resistance, and lake barriers used for the original range.
+
+The final outputs included annual maps for Years 1–20, county arrival years, translocation-seed locations, and GIS layers identifying the leading-edge counties for each analysis year.

@@ -1,0 +1,259 @@
+{
+  "model": "Final Model 2",
+  "website_version": "2026-10-26",
+  "source_package": "RRV_Westbound_Water_Onward_Model_2026-10-09.zip",
+  "runtime_data": {
+    "model_data.npz": {
+      "sha256": "b8be25f23a5b1f266f7e9f579889d60e4fc32ab8e9a42ace5816ee904c2434e7",
+      "arrays": {
+        "short": {
+          "shape": [
+            20,
+            3096
+          ],
+          "dtype": "float32"
+        },
+        "long": {
+          "shape": [
+            20,
+            3096
+          ],
+          "dtype": "float32"
+        },
+        "travel": {
+          "shape": [
+            827,
+            3096
+          ],
+          "dtype": "float32"
+        },
+        "road_global": {
+          "shape": [
+            827
+          ],
+          "dtype": "int32"
+        },
+        "baseline": {
+          "shape": [
+            3096
+          ],
+          "dtype": "float64"
+        },
+        "receptivity": {
+          "shape": [
+            3096
+          ],
+          "dtype": "float32"
+        }
+      }
+    },
+    "county_names.json": {
+      "sha256": "912feef4c13fb7b7daece01c044de4f5124c8fd7f2737ae49736be5d75955e4a"
+    },
+    "counties.svg": {
+      "sha256": "0e3f868da3a537f82b04727f12372cb612b9816e66b7854c8cbfb0c32068e30c"
+    },
+    "landscape_data.npz": {
+      "sha256": "7f241b7b28cd7aa88ce84fb1eeb95d2cb93e8b2b146d43a0d5d455a5f79ae130"
+    },
+    "route_kernels.npz": {
+      "sha256": "7575a2aa1126cfc5354af95c908723ff1eca0ddc562318184b532103ab7e784d"
+    }
+  },
+  "upstream_array_sources": {
+    "short,long": "scenarios/assumption_review_2026_10_09/annual_destination_intensity_per_event.npz",
+    "baseline": "reconstruction/translocation_routing_objects.npz:baseline_arrival",
+    "road_global,travel": "water_reconstruction/road_prop_years.npz",
+    "receptivity": "reconstruction/county_metadata.json:predicted_receptivity (float32; null becomes NaN)"
+  },
+  "coordinate_reference_system": "EPSG:5070",
+  "geometry_source": "accepted/county_arrival_p50_recept50.gpkg; county_arrival table; geometry rounded to map pixel coordinates",
+  "network": {
+    "source_url": "https://www2.census.gov/geo/tiger/TIGER2024/PRIMARYROADS/tl_2024_us_primaryroads.zip",
+    "source_sha256": "10ecc0a5978ac8f7cda970e85c150663b6f08d76bc7cab644975128b7be5c98c",
+    "route_filter": "RTTYP == I; even-numbered one- or two-digit mainline",
+    "selected_route_numbers": [
+      2,
+      4,
+      8,
+      10,
+      12,
+      14,
+      16,
+      20,
+      22,
+      24,
+      26,
+      30,
+      40,
+      44,
+      64,
+      66,
+      68,
+      70,
+      72,
+      74,
+      76,
+      78,
+      80,
+      82,
+      84,
+      86,
+      88,
+      90,
+      94,
+      96
+    ],
+    "snap_meters": 60,
+    "simplify_meters": 75,
+    "routing_geometry": "EPSG:5070 projected line length",
+    "county_order": "GPKG fid order; Python zero-based indices",
+    "n_counties": 3096,
+    "n_road_counties": 827,
+    "n_road_lines": 2244,
+    "n_outside_study_lines": 13,
+    "n_nodes": 29172,
+    "n_edges": 31882,
+    "n_offroad_corridor_counties": 0,
+    "corridor_buffer_miles": 0,
+    "n_components_before": 43,
+    "n_synthetic_connectors": 20,
+    "max_connector_meters": 2000
+  },
+  "routing": {
+    "n_road_counties": 827,
+    "graph_components": 23,
+    "road_counties_in_largest_component": 473,
+    "long_capable_origins": 700,
+    "finite_routes": 269261,
+    "route_distance_miles_max": 4537.96240234375,
+    "short_band_edges_miles": [
+      0,
+      100,
+      250,
+      500,
+      750
+    ],
+    "short_band_weights": [
+      0.25,
+      0.25,
+      0.25,
+      0.25
+    ],
+    "long_band_edges_miles": [
+      750,
+      1000,
+      1500,
+      2000,
+      3000
+    ],
+    "long_band_weights": [
+      0.25,
+      0.3,
+      0.25,
+      0.2
+    ],
+    "destination_weight": "Interstate miles intersecting destination county",
+    "origin_weight": "Interstate miles intersecting occupied origin county",
+    "fallback": "nearest populated band within short or long class",
+    "direction_rule": "destination county centroid longitude strictly west of origin county centroid longitude",
+    "route_scope": "even-numbered one- or two-digit Interstate mainlines only; local bends permitted",
+    "note": "Route and weighting assumptions are reconstruction choices, not verified archived parameters"
+  },
+  "water": {
+    "status": "new reconstruction, not the archived propagation matrix",
+    "grid_meters": 10000,
+    "speed_miles_per_year": {
+      "No/very low": 0.0,
+      "Low": 10.0,
+      "Moderate": 25.0,
+      "High": 50.0
+    },
+    "river_scalerank_max": 6,
+    "river_penalty": 4.0,
+    "lake_min_area_km2": 100.0,
+    "water_source_sha256": {
+      "natural_earth_rivers.zip": "ded71b01870855ccfe19b51f2ec14c9bb48fae23c0e9f3c11974d426433b5c38",
+      "natural_earth_lakes.zip": "0803a06f9c3cb4671d89b68c48b142aad9366ba40f665245e12a913fbc61722a",
+      "natural_earth_na_rivers.zip": "7fbe85a2acbf1f3ef4361a16bb39677ad1ea86f888be1689f7a4caeafc7529e8",
+      "tl_2024_39043_roads.zip": "f59b37a15527f051379be811dd4cf318bdf9ff7c961e2d03ba7738fe9f73d5e2",
+      "tl_2024_39123_roads.zip": "e39890f61037cc7bb30f467aeb06b807ec3bada7f1366791fd421a53f4a4100e"
+    },
+    "river_lines_used": 46,
+    "large_lakes_used": 150,
+    "grid_dimensions": [
+      462,
+      291
+    ],
+    "traversable_nodes": 73389,
+    "unrepresented_counties_nearest_cell_proxy": 14,
+    "graph_edges": 283757,
+    "river_penalized_edges": 5967,
+    "lake_blocked_edges": 558,
+    "sandusky_local_bridge_connector": {
+      "source_geoid": "39043",
+      "target_geoid": "39123",
+      "source_node": 45118,
+      "target_node": 45117,
+      "road_length_km": 37.08563939585264,
+      "lake_bridge_km": 3.6944571739641896,
+      "approach_length_km": 0.11298708583923511,
+      "travel_time_years": 2.311415488652014,
+      "river_crossings": 0,
+      "road_segments": 473
+    },
+    "matrix_shape": [
+      827,
+      3096
+    ],
+    "baseline_validation": {
+      "n_accepted_baseline_y0": 877,
+      "n_initial_grid_nodes": 12291,
+      "n_counties_compared": 1957,
+      "baseline_median_difference_years": -1.4436284228857303,
+      "baseline_median_absolute_error_years": 1.5061656698207884,
+      "baseline_mean_absolute_error_years": 1.931363886953099,
+      "baseline_counties_by_year_20_accepted": 1358,
+      "baseline_counties_by_year_20_rebuilt": 1373
+    }
+  },
+  "runtime": "Python 3.12; NumPy 2.3.5; SciPy 1.17.0",
+  "algorithm": "Annual Poisson-thinned binomial first-receipt counts or direct Poisson probabilities; strict probability and receptivity cutoffs; preemption and next-year outward propagation.",
+  "editable_landscape": {
+    "original_nodes": 73389,
+    "expanded_nodes": 77414,
+    "undirected_edges": 302915,
+    "additional_no_very_low_cells": 4025,
+    "water_features": {
+      "rivers": 46,
+      "lakes": 150
+    },
+    "original_graph_check": "All original default-speed edges retained with original weights; baseline array and two reference-seed travel arrays reproduce upstream arrays exactly.",
+    "activation": "A category assigned speed 0 is blocked; positive speed activates its dry cells. Diagonal corner rules and river/lake resistance retained.",
+    "baseline_modes": {
+      "reference": "archived arrivals; fixed default speeds; saved annual route intensity",
+      "rebuild": "shortest-time paths from year-zero counties; variable speeds; annual origin kernels recomputed"
+    },
+    "preparation_script": "provenance/build_editable_landscape.py",
+    "preparation_script_sha256": "076cba87a1b2061257adc6c69d615b5a5de326fc8f1908d4084cb962d59e2df9"
+  },
+  "habitat_model": {
+    "document_source": "provenance/methods_summary_bachelors_level.txt",
+    "source_sha256": "ca9c2174c1c6a9a35f3455e9a48ae236eb4287be0c06d203182b9152dc4b557c",
+    "target": "1 minus 2024 county probability of freedom from multi-year NRSS data",
+    "model": "Random Forest",
+    "predictors": "11 NLCD land-cover variables, latitude, ln(human population density + 1)",
+    "development_counties": 974,
+    "holdout_fraction": 0.1,
+    "prediction_counties": 3096,
+    "not_recovered": [
+      "exact predictor names and vintages",
+      "training/prediction covariate tables",
+      "preprocessing and exclusions",
+      "forest settings/fitted model",
+      "split seed and holdout counties",
+      "validation results",
+      "category boundary rule"
+    ]
+  }
+}
