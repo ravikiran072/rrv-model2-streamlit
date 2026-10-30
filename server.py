@@ -22,7 +22,7 @@ FIELDS = {
     "observed_event_interval", "detection_probability", "establishment_probability",
     "receptivity_cutoff", "receipt_cutoff", "long_haul_share", "long_haul_distance",
     "route_scope", "origin_destination_weights", "spread_speed", "water_barriers",
-    "event_timing", "new_source_feedback", "burden_scaling",
+    "event_timing", "new_source_feedback", "burden_scaling", "mean_transport_km",
 }
 
 

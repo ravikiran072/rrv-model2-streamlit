@@ -2,9 +2,9 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const style=require('./map_style.js');
-const result=JSON.parse(fs.readFileSync(path.join(__dirname,'provenance/metric_scenario_reference.json')));
+const result=JSON.parse(fs.readFileSync(path.join(__dirname,'provenance/shifted_exponential_scenario_reference.json')));
 assert.deepEqual(style.colors,['#a6b2bb','#438bb5','#e7a13e','#cf704b']);
-assert.deepEqual(style.count(result,20),[1083,877,811,325]);
+assert.deepEqual(style.count(result,20),[1093,877,837,289]);
 assert.deepEqual(style.count(result,0),[2219,877,0,0]);
 for(let c=0;c<4;c++){
  assert.equal(style.shade(c,0),'#ffffff');
@@ -15,3 +15,7 @@ for(let c=0;c<4;c++){
 assert.equal(style.source(result,149,8),0);
 assert.equal(style.source(result,149,9),3);
 console.log('Approved palette, probability shading, annual attribution and map totals verified.');
+
+assert.equal(style.deliveryShade(0),'#ffffff');
+assert.equal(style.deliveryShade(1),'#174a7e');
+assert.equal(style.deliveryShade(.5),'#8ba5bf');

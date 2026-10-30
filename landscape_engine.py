@@ -3,7 +3,7 @@ from functools import lru_cache
 from pathlib import Path
 
 import numpy as np
-from scipy.sparse import coo_matrix, csr_matrix
+from scipy.sparse import coo_matrix
 from scipy.sparse.csgraph import dijkstra
 from scipy.spatial import cKDTree
 
@@ -75,26 +75,4 @@ def travel(speeds, county):
     else:
         result = summarize(dijkstra(ctx["graph"], directed=False, indices=int(node)), ctx)
     result[county] = 0
-    return result
-
-
-@lru_cache(maxsize=1)
-def kernels():
-    with np.load(ROOT / "route_kernels.npz") as f:
-        return dict(short=csr_matrix(f["short"]), long=csr_matrix(f["long"]),
-                    road_global=f["road_global"], exposure=f["exposure"],
-                    long_capable=f["long_capable"])
-
-
-def annual_probabilities(baseline, horizon):
-    k = kernels()
-    result = np.zeros((2, horizon, len(baseline)), dtype=np.float64)
-    for year in range(1, horizon + 1):
-        occupied = baseline[k["road_global"]] <= year - 1
-        for j, kind in enumerate(("short", "long")):
-            eligible = occupied if j == 0 else occupied & k["long_capable"]
-            weights = k["exposure"] * eligible
-            total = weights.sum()
-            if total:
-                result[j, year - 1] = (weights / total) @ k[kind]
     return result

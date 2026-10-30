@@ -1,0 +1,69 @@
+{
+  "inputs": {
+    "distance_unit": "km",
+    "speed_unit": "km/year",
+    "speed_step": 2,
+    "observed_per_year": 0.2,
+    "detection_probability": 0.01,
+    "initial_annual_infectious_transports": 20.0,
+    "annual_infectious_transports": 20.0,
+    "long_share": 0.6,
+    "receipt_cutoff": 0.5,
+    "receptivity_cutoff": 0.7928484500378316,
+    "horizon": 20,
+    "mode": "monte_carlo",
+    "random_seed": 20261009,
+    "simulations": 10000,
+    "landscape_mode": "rebuild",
+    "scale_transport_with_burden": true,
+    "include_nidi_as_origins": true,
+    "burden_reference_counties": 877,
+    "speed_very_low": 0.0,
+    "speed_low": 16.0,
+    "speed_moderate": 40.0,
+    "speed_high": 80.0
+  },
+  "baseline_count": 1908,
+  "reached": 2013,
+  "added": 105,
+  "nidi": 5,
+  "seeds": [
+    {
+      "index": 149,
+      "year": 9,
+      "p_receipt": 0.5435,
+      "receptivity": 0.8911
+    },
+    {
+      "index": 3017,
+      "year": 10,
+      "p_receipt": 0.5068,
+      "receptivity": 0.8476
+    },
+    {
+      "index": 1470,
+      "year": 12,
+      "p_receipt": 0.508,
+      "receptivity": 0.8641
+    },
+    {
+      "index": 2922,
+      "year": 16,
+      "p_receipt": 0.5069,
+      "receptivity": 0.8143
+    },
+    {
+      "index": 1461,
+      "year": 17,
+      "p_receipt": 0.5142,
+      "receptivity": 0.8444
+    }
+  ],
+  "source_counts": {
+    "unreached": 1083,
+    "initial": 877,
+    "main_front_first": 811,
+    "nidus_first": 325
+  },
+  "metric_change": "Speeds rounded to nearest multiples of 2 km/year; long-haul routing bands converted exactly, without changing routing kernels."
+}

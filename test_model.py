@@ -23,11 +23,21 @@ class ModelTests(unittest.TestCase):
 
     def test_accepted_reference(self):
         r = self.result
-        reference = json.loads((Path(__file__).parent / "provenance/metric_scenario_reference.json").read_text())
-        for key in ("arrival", "baseline_arrival", "p_receipt", "receipt_probability_history", "annual", "seeds"):
+        reference = json.loads((Path(__file__).parent / "provenance/shifted_exponential_scenario_reference.json").read_text())
+        for key in ("arrival", "baseline_arrival", "p_receipt", "receipt_probability_history", "seeds"):
             self.assertEqual(r[key], reference[key], key)
-        self.assertEqual((r["baseline_count"], r["reached"], r["added"], r["nidi"]), (1908, 2013, 105, 5))
-        self.assertEqual([(s["index"], s["year"]) for s in r["seeds"]], [(149,9),(3017,10),(1470,12),(2922,16),(1461,17)])
+        self.assertEqual(len(r["annual"]), len(reference["annual"]))
+        for actual, expected in zip(r["annual"], reference["annual"]):
+            self.assertEqual(actual.keys(), expected.keys())
+            for field in actual:
+                if field in ("assigned_mean_distance_km", "assigned_long_share"):
+                    # BLAS reduction order varies across platforms at the last
+                    # floating-point bit. Keep all modeled events/counts exact.
+                    np.testing.assert_allclose(actual[field], expected[field], rtol=1e-14, atol=1e-12)
+                else:
+                    self.assertEqual(actual[field], expected[field], field)
+        self.assertEqual((r["baseline_count"], r["reached"], r["added"], r["nidi"]), (1908, 2003, 95, 5))
+        self.assertEqual([(s["index"], s["year"]) for s in r["seeds"]], [(149,9),(733,9),(2922,11),(3017,11),(1461,19)])
 
     def test_annual_feedback_and_prefix(self):
         r = self.result
@@ -40,12 +50,43 @@ class ModelTests(unittest.TestCase):
         self.assertEqual(short["annual"], r["annual"][:10])
         self.assertEqual(short["receipt_probability_history"], r["receipt_probability_history"][:10])
 
-    def test_fixed_rate_and_no_transport(self):
-        r = run({"scale_transport_with_burden":False,"include_nidi_as_origins":False})
-        self.assertEqual((r["baseline_count"],r["reached"],r["added"],r["nidi"]),(1908,1924,16,2))
-        self.assertTrue(all(a["annual_infectious_transport_mean"] == 20 for a in r["annual"]))
-        zero = run({"observed_per_year":0})
+    def test_transport_rate_anchor_and_no_transport(self):
+        shorter=run({"mean_transport_km":1000})
+        self.assertEqual(shorter["annual"][0]["annual_infectious_transport_mean"],20)
+        self.assertEqual(self.result["annual"][0]["annual_infectious_transport_mean"],20)
+        self.assertNotEqual(shorter["p_receipt"],self.result["p_receipt"])
+        fixed=run({"scale_transport_with_burden":False,"include_nidi_as_origins":False})
+        self.assertTrue(all(a["annual_infectious_transport_mean"]==20 for a in fixed["annual"]))
+        zero=run({"observed_per_year":0})
         self.assertEqual((zero["reached"],zero["added"],zero["nidi"]),(1908,0,0))
+        self.assertTrue(all(p==0 for p in zero["p_receipt"]))
+
+    def test_shifted_exponential_distribution_and_95_range(self):
+        from transport_engine import distribution
+        for mean in (102,1000,2268,10000):
+            d=distribution(mean);scale=mean-100
+            self.assertAlmostEqual(sum(d["band_weights"]),1)
+            for value,expected in ((d["central_95_lower_km"],.025),(d["central_95_upper_km"],.975)):
+                self.assertAlmostEqual(1-np.exp(-(value-100)/scale),expected)
+            self.assertAlmostEqual(d["nominal_long_share"],np.exp(-(1207.008-100)/scale))
+        self.assertLess(distribution(1000)["nominal_long_share"],distribution(2268)["nominal_long_share"])
+        self.assertEqual(distribution(1000)["band_edges_km"][0],100)
+        self.assertIsNone(distribution(1000)["band_edges_km"][-1])
+
+    def test_every_assigned_route_meets_minimum_and_direction(self):
+        from transport_engine import routes,kernel
+        a=routes();d=a["distance_km"];road=a["road_global"]
+        for mean in (102,1000,2268,10000):
+            k=kernel(mean);coo=k["matrix"][:,road].tocoo();positive=coo.data>0
+            i,j=coo.row[positive],coo.col[positive]
+            self.assertTrue(np.all(d[i,j]>=100))
+            self.assertTrue(np.all(a["longitude"][j]<a["longitude"][i]))
+            mass=np.asarray(k["matrix"].sum(axis=1)).ravel()
+            np.testing.assert_allclose(mass[a["has_destination"]],1,atol=1e-12)
+            self.assertTrue(np.all(mass[~a["has_destination"]]==0))
+        for row in self.result["annual"]:
+            self.assertAlmostEqual(row["annual_assigned_transport_mean"]+row["annual_unassigned_transport_mean"],row["annual_infectious_transport_mean"])
+            self.assertGreaterEqual(row["assigned_mean_distance_km"],100)
 
     def test_map_year_counts_and_probabilities(self):
         r = self.result
@@ -86,7 +127,7 @@ class ModelTests(unittest.TestCase):
 
     def test_invalid_inputs(self):
         for p in ({"detection_probability":0},{"horizon":1.5},{"mode":"bad"},{"random_seed":-1},
-                  {"receipt_cutoff":float("nan")},{"speed_high":-1},{"scale_transport_with_burden":"yes"},{"speed_low":17},{"speed_high":402},[]):
+                  {"receipt_cutoff":float("nan")},{"speed_high":-1},{"scale_transport_with_burden":"yes"},{"speed_low":17},{"speed_high":402},{"mean_transport_km":100},{"mean_transport_km":float("nan")},{"long_share":.6},[]):
             with self.assertRaises(ValueError): run(p)
 
 
@@ -115,9 +156,9 @@ class WebTests(unittest.TestCase):
 
     def test_http_scenario_and_methods(self):
         with self.post("/api/scenario", {}) as response:
-            self.assertEqual(json.load(response)["added"], 105)
-        for route, expected in (("/", b'data-tab="methods"'), ("/methods.html", b'Binomial'),
-                                ("/app.js", b'queueCalculation'), ("/counties.svg", b'data-i='), ("/map_style.js", b'#cf704b'), ("/model_info.json", b'2013')):
+            self.assertEqual(json.load(response)["added"], 95)
+        for route, expected in (("/", b'data-tab="delivery"'), ("/methods.html", b'Binomial'),
+                                ("/app.js", b'queueCalculation'), ("/counties.svg", b'data-i='), ("/map_style.js", b'#cf704b'), ("/model_info.json", b'2003')):
             with urllib.request.urlopen(self.base + route) as response:
                 self.assertIn(expected, response.read())
         with self.post("/api/scenario", {"speed_low": 18}) as response:
@@ -129,8 +170,8 @@ class WebTests(unittest.TestCase):
         self.assertEqual(caught.exception.code, 400)
 
     def test_expert_capture_and_protected_export(self):
-        payload = {"name": "Test", "inputs": {"receipt_cutoff": {
-            "central": ".5", "low": ".3", "high": ".7", "evidence": "QA example"}}}
+        payload = {"name": "Test", "inputs": {"mean_transport_km": {
+            "central": "2268", "low": ".3", "high": ".7", "evidence": "QA example"}}}
         with self.post("/api/submissions", payload) as response:
             self.assertTrue(json.load(response)["saved"])
         old_token = os.environ.get("RRV_ADMIN_TOKEN")

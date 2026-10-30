@@ -12,8 +12,8 @@
   "default_reference": {
     "initial_counties": 877,
     "natural_only_year20": 1908,
-    "reached_year20": 2013,
-    "additional_year20": 105,
+    "reached_year20": 2003,
+    "additional_year20": 95,
     "independent_nidi": 5
   },
   "default_receptivity_cutoff": 0.7928484500378316,
@@ -35,5 +35,41 @@
     400
   ],
   "long_haul_min_km": 1207.008,
-  "metric_note": "Rounded defaults use 0/16/40/80 km/year. Historical accepted reference retains its original speed units in provenance/historical_accepted_scenario_reference.json."
+  "metric_note": "Rounded defaults use 0/16/40/80 km/year. Historical accepted reference retains its original speed units in provenance/historical_accepted_scenario_reference.json.",
+  "transport_distance": {
+    "family": "shifted_exponential",
+    "minimum_km": 100.0,
+    "mean_total_km": 2268.0,
+    "exponential_scale_km": 2168.0,
+    "central_95_lower_km": 154.8890077099405,
+    "central_95_upper_km": 8097.490656519014,
+    "nominal_long_share": 0.6001278602059094,
+    "long_threshold_km": 1207.008,
+    "band_edges_km": [
+      100.0,
+      160.9344,
+      402.336,
+      804.672,
+      1207.008,
+      1609.344,
+      2414.016,
+      3218.688,
+      null
+    ],
+    "band_weights": [
+      0.027714966397791696,
+      0.10245188986813658,
+      0.14732978506692496,
+      0.12237549846123741,
+      0.10164789568405003,
+      0.1545614594396033,
+      0.10663727703637546,
+      0.23728122804588056
+    ],
+    "note": "Curve probabilities are discretized into eight routing bands; eligible routes and empty-band fallback can alter the assigned distance distribution."
+  },
+  "trucking_volume_data_used": false,
+  "volume_note": "Event frequency sets the national rate; normalized Interstate length allocates origins/destinations.",
+  "dropoff_map": "Cumulative probability of at least one infectious delivery by selected year; no habitat threshold applied.",
+  "qa": "11 Python tests and Node map checks passed; headless Chromium verified both maps, live controls, sliders, downloads, methods, expert capture and mobile layout."
 }

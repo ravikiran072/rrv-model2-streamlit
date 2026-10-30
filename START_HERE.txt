@@ -20,6 +20,11 @@ UPDATED OCTOBER 30
 Updated habitat model includes EPA sewershed coverage. Annual transports scale
 with reached-county burden and earlier nidi contribute transport origins.
 Every scenario recalculates the landscape from year zero. Default year 20:
-2,013 reached counties; 1,908 natural-only; 105 additional; 5 independent nidi.
+2,003 reached counties; 1,908 natural-only; 95 additional; 5 independent nidi.
 Spread speeds use km/year: defaults 0 / 16 / 40 / 80; steps of 2 (0-400).
 The map uses source colors, white-to-hue habitat shading, and nidus stars.
+Transport distance now uses a shifted exponential with a 100-km minimum.
+Edit Mean total transport distance (default 2,268 km) to update the curve,
+central 95% trip-distance range, and derived long-haul share.
+The Drop-off probability tab shows a separate map of cumulative deliveries.
+Both maps share the selected year and county. No trucking-volume data are used.

@@ -17,12 +17,13 @@ import streamlit as st
 import model_engine
 import model_utils
 import landscape_engine
+import transport_engine
 
 ROOT = Path(__file__).resolve().parent
 SPEED_KEYS = ("speed_very_low", "speed_low", "speed_moderate", "speed_high")
 MODEL_REVISION = hashlib.sha256(b"".join((ROOT / name).read_bytes() for name in
-    ("model_info.json", "model_engine.py", "model_utils.py", "landscape_engine.py",
-     "model_data.npz", "landscape_data.npz", "route_kernels.npz"))).hexdigest()
+    ("model_info.json", "model_engine.py", "model_utils.py", "landscape_engine.py", "transport_engine.py",
+     "model_data.npz", "landscape_data.npz", "transport_routes.npz"))).hexdigest()
 MODEL_INFO = json.loads((ROOT / "model_info.json").read_text(encoding="utf-8"))
 DEFAULT_SPEEDS = tuple(float(value) for value in MODEL_INFO["default_speeds_km_per_year"])
 # Streamlit reruns this script after a Git update, while Python can retain
@@ -32,6 +33,7 @@ if getattr(model_engine, "_streamlit_revision", None) != MODEL_REVISION:
     importlib.invalidate_caches()
     importlib.reload(model_utils)
     importlib.reload(landscape_engine)
+    importlib.reload(transport_engine)
     importlib.reload(model_engine)
     model_engine._streamlit_revision = MODEL_REVISION
 SOURCE_COLORS = ("#a6b2bb", "#438bb5", "#e7a13e", "#cf704b")
@@ -41,11 +43,10 @@ EXPERT_FIELDS = [
     ("detection_probability", "Detection probability", "Fraction; default 0.01", "Active"),
     ("receptivity_cutoff", "Habitat receptivity cutoff", "Score 0–1; default 0.7928484500378316 (year-zero median)", "Active"),
     ("receipt_cutoff", "County receipt cutoff", "Fraction; default 0.50", "Active"),
-    ("long_haul_share", "Long-haul share", "Fraction ≥1,207.008 routed km; default 0.60", "Active"),
+    ("mean_transport_km", "Mean total transport distance", "km, including the 100-km minimum; default 2,268", "Active"),
     ("spread_speed", "Spread speeds by habitat", "km/year; default 0 / 16 / 40 / 80; steps of 2", "Active"),
     ("burden_scaling", "Transport burden scaling", "Default on; proportional to start-of-year reached counties", "Active"),
     ("new_source_feedback", "Earlier nidi as transport origins", "Default on; beginning the following year", "Active"),
-    ("long_haul_distance", "Distance bands", "Routed km / trip distribution", "Recorded only"),
     ("route_scope", "Interstate corridor scope", "Even-numbered one/two-digit, westbound", "Recorded only"),
     ("origin_destination_weights", "Origin and destination weighting", "Eligible Interstate km", "Recorded only"),
     ("water_barriers", "River and lake effects", "Fourfold river delay; lakes blocked", "Recorded only"),
@@ -70,16 +71,17 @@ def current_result(result):
     if not isinstance(result, dict) or result.get("model_revision") != MODEL_REVISION:
         return False
     required = {"inputs", "annual", "arrival", "baseline_arrival", "receptivity",
-                "p_receipt", "receipt_probability_history", "seeds", "model_note"}
+                "p_receipt", "receipt_probability_history", "seeds", "model_note", "distance_distribution"}
     required_inputs = {"initial_annual_infectious_transports", "scale_transport_with_burden",
                        "include_nidi_as_origins", "horizon", "mode", "random_seed",
-                       "receipt_cutoff", "receptivity_cutoff", "landscape_mode", "speed_unit", "distance_unit"}
+                       "receipt_cutoff", "receptivity_cutoff", "landscape_mode", "speed_unit", "distance_unit", "mean_transport_km"}
     return (required.issubset(result) and isinstance(result["inputs"], dict)
             and required_inputs.issubset(result["inputs"])
             and result["inputs"]["speed_unit"] == "km/year"
             and isinstance(result["annual"], list) and bool(result["annual"])
             and all(isinstance(row, dict) and {"annual_infectious_transport_mean",
-                    "expected_detected_transports", "year", "baseline", "reached", "added"}.issubset(row)
+                    "expected_detected_transports", "year", "baseline", "reached", "added",
+                    "assigned_mean_distance_km", "assigned_long_share"}.issubset(row)
                     for row in result["annual"]))
 
 
@@ -131,6 +133,81 @@ def shade(code, score):
     probability = max(0., min(1., float(score)))
     color = SOURCE_COLORS[code][1:]
     return "#" + "".join(f'{math.floor(255 * (1 - probability * (1 - int(color[k:k+2], 16) / 255)) + .5):02x}' for k in (0, 2, 4))
+
+
+def delivery_shade(value):
+    probability = max(0., min(1., float(value)))
+    return "#" + "".join(f'{math.floor(255 + (channel - 255) * probability + .5):02x}' for channel in (23, 74, 126))
+
+
+def sync_selection(source, target):
+    st.session_state[target] = st.session_state[source]
+
+
+def delivery_svg(result, year):
+    """Cumulative delivery probability, without habitat or nidus screening."""
+    probabilities = result["receipt_probability_history"][year - 1] if year else [0.] * len(result["arrival"])
+    county_paths, state_paths = map_parts()
+    names = county_names()
+    paths = []
+    for i, geometry in county_paths:
+        title = escape(f'{names[i]["name"]}, {names[i]["state"]}: {probabilities[i]:.2%}')
+        paths.append(f'<path data-i="{i}" fill="{delivery_shade(probabilities[i])}" d="{geometry}"><title>{title}</title></path>')
+    boundaries = ''.join(f'<path d="{geometry}"/>' for geometry in state_paths)
+    ticks = ''.join(f'<text x="{130+k*197.5}" y="810" text-anchor="middle">{25*k}%</text>' for k in range(5))
+    return ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1050 875" role="img" aria-label="Cumulative delivery probability map">'
+            f'<title>Rabid raccoon drop-off probability — year {year}</title><desc>{escape(json.dumps(result["inputs"]))}</desc>'
+            '<defs><linearGradient id="deliveryRamp"><stop offset="0%" stop-color="#ffffff"/>'
+            '<stop offset="100%" stop-color="#174a7e"/></linearGradient></defs><rect width="1050" height="875" fill="white"/>'
+            f'<text x="20" y="30" font-family="Arial" font-size="23">Rabid raccoon drop-off probability — year {year}</text>'
+            '<text x="20" y="56" font-family="Arial" font-size="14">Cumulative probability of at least one infectious delivery</text>'
+            '<g transform="translate(0,75)"><g stroke="#ffffff" stroke-width=".22">' + ''.join(paths)
+            + '</g><g fill="none" stroke="#65747e" stroke-width=".65">' + boundaries + '</g></g>'
+            '<rect x="130" y="770" width="790" height="18" fill="url(#deliveryRamp)"/>'
+            '<g font-family="Arial" font-size="13">' + ticks
+            + f'<text x="20" y="845">Delivery probability only; no habitat threshold. Minimum 100 km; mean {result["inputs"]["mean_transport_km"]:g} km.</text></g></svg>')
+
+
+def distance_view(result):
+    distribution = result["distance_distribution"]
+    with st.expander("Transport distance distribution", expanded=True):
+        st.write(f'Mean total distance: **{distribution["mean_total_km"]:,.0f} km** · '
+                 f'Central 95% of trip distances: **{distribution["central_95_lower_km"]:,.0f}–{distribution["central_95_upper_km"]:,.0f} km** · '
+                 f'Derived long-haul share: **{distribution["nominal_long_share"]:.1%}**')
+        st.caption("The range describes trip distances, not uncertainty in the mean. All trips are at least 100 km. The initial mean is an assumption for expert review.")
+        scale = distribution["exponential_scale_km"]
+        distances = [100 + scale * 5.3 * i / 119 for i in range(120)]
+        curve = pd.DataFrame({"Total routed distance (km)": distances,
+                              "Relative density": [math.exp(-(x - 100) / scale) for x in distances]})
+        st.line_chart(curve.set_index("Total routed distance (km)"))
+        edges = distribution["band_edges_km"]
+        bands = [{"Distance band (km)": f'{edges[i]:,.4f}–<{edges[i+1]:,.4f}' if edges[i+1] is not None else f'{edges[i]:,.4f}+',
+                  "Probability (%)": 100 * probability} for i, probability in enumerate(distribution["band_weights"])]
+        st.dataframe(pd.DataFrame(bands), hide_index=True, width="stretch")
+        st.caption("Routing constraints and empty-band fallback can change the assigned distance distribution. The national transport rate is anchored by detected events and detection probability; measured trucking-volume data are not used.")
+
+
+def delivery_view(result):
+    st.subheader("Drop-off probability")
+    st.write("Chance of at least one infectious raccoon delivery to each county by the selected year. This map applies no habitat or nidus threshold.")
+    year = st.slider("Drop-off map year", 0, result["inputs"]["horizon"], key="delivery_map_year",
+                     on_change=sync_selection, args=("delivery_map_year", "map_year"))
+    frame = county_table(result, year)
+    probabilities = frame.delivery_probability_by_map_year
+    st.caption(f'Year {year}: {(probabilities > 0).sum():,} counties with nonzero delivery probability · '
+               f'{(probabilities > .5).sum():,} above 50% · Maximum {probabilities.max():.1%}. Both maps use the same year.')
+    svg = delivery_svg(result, year)
+    st.image(svg, width="stretch")
+    names = county_names()
+    options = sorted(range(len(names)), key=lambda i: (names[i]["state"], names[i]["name"]))
+    county = st.selectbox("Inspect delivery county", options, key="delivery_county_index",
+                          format_func=lambda i: f'{names[i]["name"]}, {names[i]["state"]}',
+                          on_change=sync_selection, args=("delivery_county_index", "county_index"))
+    columns = ["geoid", "name", "state", "map_year", "delivery_probability_by_map_year", "receipt_probability_at_horizon"]
+    st.dataframe(frame.iloc[[county]][columns], hide_index=True, width="stretch")
+    a, b = st.columns(2)
+    a.download_button("Drop-off SVG", svg, f"model2_delivery_probability_year_{year}.svg", "image/svg+xml")
+    b.download_button("Delivery CSV", frame[columns].to_csv(index=False), f"model2_delivery_probability_year_{year}.csv", "text/csv")
 
 
 def map_svg(result, year):
@@ -187,7 +264,9 @@ def controls():
         with st.form("scenario"):
             observed = st.number_input("Detected transported rabid raccoons / year", 0., 20., .2, .1, format="%.3f", help="Year-zero detected transport rate; annual transports can grow with burden.")
             detection = st.number_input("Detection probability (%)", .01, 100., 1., .1, format="%.2f")
-            long_share = st.slider("Long-haul share (%)", 0., 100., 60., help="Share traveling at least 1,207.008 routed km.")
+            mean_distance = st.number_input("Mean total transport distance (km)", 100.01, 10000.,
+                                           float(MODEL_INFO["transport_distance"]["mean_total_km"]), 2.,
+                                           help="Total distance is 100 km plus an exponential additional distance. Long-haul share is derived automatically.")
             receipt = st.slider("Minimum cumulative delivery chance (%)", 0., 100., 50.)
             receptivity = st.number_input("Minimum habitat suitability score", 0., 1., MODEL_INFO["default_receptivity_cutoff"], .01, format="%.6f")
             horizon = st.slider("Horizon (years)", 1, 20, 20)
@@ -205,7 +284,7 @@ def controls():
             st.caption("Speeds use steps of 2 km/year (0–400). The landscape, annual origins, and onward spread are recalculated from year zero for every scenario.")
             applied = st.form_submit_button("Apply scenario", type="primary", width="stretch")
     params = dict(observed_per_year=observed, detection_probability=detection / 100,
-                  long_share=long_share / 100, receipt_cutoff=receipt / 100,
+                  mean_transport_km=mean_distance, receipt_cutoff=receipt / 100,
                   receptivity_cutoff=receptivity, horizon=horizon, mode=mode,
                   random_seed=seed, landscape_mode="rebuild", scale_transport_with_burden=scale,
                   include_nidi_as_origins=feedback,
@@ -218,6 +297,7 @@ def controls():
                 result = calculate(params, MODEL_REVISION)
             st.session_state.result = result
             st.session_state.map_year = horizon
+            st.session_state.delivery_map_year = horizon
             st.session_state.pop("scenario_error", None)
         except ValueError as exc:
             st.session_state.scenario_error = str(exc)
@@ -233,7 +313,8 @@ def scenario_view(result):
                f'{"10,000 histories; seed " + str(params["random_seed"]) if params["mode"] == "monte_carlo" else "Direct Poisson probabilities"}')
     st.caption(f'Burden scaling: {"on" if params["scale_transport_with_burden"] else "off"} · Earlier nidi as origins: {"on" if params["include_nidi_as_origins"] else "off"} · Landscape recalculated from year zero.')
     st.caption(f'New foci require cumulative delivery chance >{params["receipt_cutoff"]:.1%} AND habitat score >{params["receptivity_cutoff"]:.6f}, before the existing front arrives. Habitat score is not a biological establishment probability.')
-    year = st.slider("Map year", 0, params["horizon"], key="map_year")
+    year = st.slider("Map year", 0, params["horizon"], key="map_year",
+                     on_change=sync_selection, args=("map_year", "delivery_map_year"))
     row = result["annual"][year - 1] if year else dict(
         baseline=sum(x == 0 for x in result["baseline_arrival"]),
         reached=sum(x == 0 for x in result["arrival"]), added=0)
@@ -242,6 +323,9 @@ def scenario_view(result):
     b.metric("Baseline counties", f'{row["baseline"]:,}')
     c.metric("Additional counties", f'{row["added"]:,}')
     d.metric("Independent foci to this year", sum(s["year"] <= year for s in result["seeds"]))
+    if year and row["assigned_mean_distance_km"] is not None:
+        st.caption(f'Assigned routes in year {year}: mean {row["assigned_mean_distance_km"]:,.0f} km · '
+                   f'{row["assigned_long_share"]:.1%} long haul after routing constraints.')
     svg = map_svg(result, year)
     # st.html's HTML-only sanitizer removes SVG elements in Streamlit 1.56.
     # The image renderer accepts SVG strings and preserves the county paths.
@@ -249,11 +333,13 @@ def scenario_view(result):
     st.caption("Blue: year-zero endemic counties · Gold: main front · Coral: nidus-first arrival · Gray: not reached. Each color blends from white using the fixed habitat score, including unreached counties. Coral includes counties reached earlier by nidi even when the natural front arrives later within the horizon.")
     names = county_names()
     county = st.selectbox("Inspect a county", sorted(range(len(names)), key=lambda i: (names[i]["state"], names[i]["name"])),
-                          format_func=lambda i: f'{names[i]["name"]}, {names[i]["state"]}')
+                          format_func=lambda i: f'{names[i]["name"]}, {names[i]["state"]}', key="county_index",
+                          on_change=sync_selection, args=("county_index", "delivery_county_index"))
     frame = county_table(result, year)
     detail = frame.iloc[[county]].copy()
     detail.insert(0, "status_at_map_year", county_status(result, county, year))
     st.dataframe(detail, hide_index=True, width="stretch")
+    distance_view(result)
     st.subheader("Annual results")
     annual = pd.DataFrame(result["annual"])
     st.line_chart(annual.set_index("year")[["baseline", "reached", "added"]])
@@ -342,12 +428,15 @@ def main():
     st.title("Raccoon rabies scenario explorer")
     st.write("Explore how transported infections and natural spread affect county reach over time.")
     controls()
-    scenario, expert, methods = st.tabs(["Scenario explorer", "Expert input", "Model methods"])
+    scenario, delivery, expert, methods = st.tabs(["Scenario explorer", "Drop-off probability", "Expert input", "Model methods"])
     with scenario:
         if "result" in st.session_state:
             scenario_view(st.session_state.result)
         else:
             st.error(st.session_state.get("scenario_error", "Apply a scenario to begin."))
+    with delivery:
+        if "result" in st.session_state:
+            delivery_view(st.session_state.result)
     with expert:
         expert_view()
     with methods:

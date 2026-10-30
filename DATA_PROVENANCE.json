@@ -12,8 +12,8 @@
   "default_reference": {
     "initial_counties": 877,
     "natural_only_year20": 1908,
-    "reached_year20": 2013,
-    "additional_year20": 105,
+    "reached_year20": 2003,
+    "additional_year20": 95,
     "independent_nidi": 5
   },
   "default_receptivity_cutoff": 0.7928484500378316,
@@ -77,41 +77,49 @@
     "n_road_counties": 827,
     "graph_components": 23,
     "road_counties_in_largest_component": 473,
-    "long_capable_origins": 700,
     "finite_routes": 269261,
     "route_distance_km_max": 7303.1425644375,
-    "short_band_edges_km": [
-      0.0,
-      160.9344,
-      402.336,
-      804.672,
-      1207.008
-    ],
-    "short_band_weights": [
-      0.25,
-      0.25,
-      0.25,
-      0.25
-    ],
-    "long_band_edges_km": [
-      1207.008,
-      1609.344,
-      2414.016,
-      3218.688,
-      4828.032
-    ],
-    "long_band_weights": [
-      0.25,
-      0.3,
-      0.25,
-      0.2
-    ],
     "destination_weight": "Interstate kilometers intersecting destination county",
     "origin_weight": "Interstate kilometers intersecting occupied origin county",
-    "fallback": "nearest populated band within short or long class",
+    "fallback": "Nearest populated band by index among all eight; ties toward shorter; every route remains >=100 km and strictly westbound",
     "direction_rule": "destination county centroid longitude strictly west of origin county centroid longitude",
     "route_scope": "even-numbered one- or two-digit Interstate mainlines only; local bends permitted",
-    "note": "Route and weighting assumptions are reconstruction choices, not verified archived parameters"
+    "note": "Route and weighting assumptions are reconstruction choices, not verified archived parameters",
+    "distribution": {
+      "family": "shifted_exponential",
+      "minimum_km": 100.0,
+      "mean_total_km": 2268.0,
+      "exponential_scale_km": 2168.0,
+      "central_95_lower_km": 154.8890077099405,
+      "central_95_upper_km": 8097.490656519014,
+      "nominal_long_share": 0.6001278602059094,
+      "long_threshold_km": 1207.008,
+      "band_edges_km": [
+        100.0,
+        160.9344,
+        402.336,
+        804.672,
+        1207.008,
+        1609.344,
+        2414.016,
+        3218.688,
+        null
+      ],
+      "band_weights": [
+        0.027714966397791696,
+        0.10245188986813658,
+        0.14732978506692496,
+        0.12237549846123741,
+        0.10164789568405003,
+        0.1545614594396033,
+        0.10663727703637546,
+        0.23728122804588056
+      ],
+      "note": "Curve probabilities are discretized into eight routing bands; eligible routes and empty-band fallback can alter the assigned distance distribution."
+    },
+    "minimum_distance_km": 100,
+    "trucking_volume_data_used": false,
+    "source_routing_archive": "provenance/transport_route_preparation.json"
   },
   "water": {
     "grid_km": 10.0,
@@ -257,20 +265,28 @@
         }
       }
     },
-    "route_kernels.npz": {
-      "sha256": "7575a2aa1126cfc5354af95c908723ff1eca0ddc562318184b532103ab7e784d",
+    "county_names.json": {
+      "sha256": "bc20a3ae489bae40f0007e7d5e25ff65d5d80286349cc0caaf5a7066dc662cc3"
+    },
+    "counties.svg": {
+      "sha256": "0ad20ac5eef2e0c22d845eb496f3699da02ba14d9a536581ec0cf569f83aaaac"
+    },
+    "map_style.js": {
+      "sha256": "58719cf356bb6d4850832fa9ad7fbdd11054bf476b82de3601d90bfae85402d5"
+    },
+    "provenance/final_habitat_forest_715.joblib": {
+      "sha256": "5f13b37eff60f3338c211101635c4ef0c63ab997a51d12552dce25a2fc0335d4"
+    },
+    "provenance/historical_accepted_scenario_reference.json": {
+      "sha256": "ea6610a9196afbf0ce54e010a3253ca1401fe64a43036da16f5aa38c9b720d03"
+    },
+    "transport_routes.npz": {
+      "sha256": "b4ecd4b03dad72d1839ed809e437b5fa3f3f8f03d810d94ddf52e1bead7277f1",
       "arrays": {
-        "short": {
+        "distance_km": {
           "shape": [
             827,
-            3096
-          ],
-          "dtype": "float64"
-        },
-        "long": {
-          "shape": [
-            827,
-            3096
+            827
           ],
           "dtype": "float64"
         },
@@ -280,37 +296,37 @@
           ],
           "dtype": "int32"
         },
-        "exposure": {
+        "exposure_km": {
           "shape": [
             827
           ],
           "dtype": "float64"
         },
-        "long_capable": {
+        "longitude": {
           "shape": [
             827
           ],
-          "dtype": "bool"
+          "dtype": "float64"
         }
       }
     },
-    "county_names.json": {
-      "sha256": "bc20a3ae489bae40f0007e7d5e25ff65d5d80286349cc0caaf5a7066dc662cc3"
+    "provenance/shifted_exponential_scenario_reference.json": {
+      "sha256": "30a103d02b155d4a59705c13f23ee973ddafb34de43930f82262b25b7dfdb440"
     },
-    "counties.svg": {
-      "sha256": "0ad20ac5eef2e0c22d845eb496f3699da02ba14d9a536581ec0cf569f83aaaac"
-    },
-    "map_style.js": {
-      "sha256": "20442af827ba5b5fc3acc2c19ce6b15a3a87055b6ca41e4b6c74f428f2ef7865"
-    },
-    "provenance/final_habitat_forest_715.joblib": {
-      "sha256": "5f13b37eff60f3338c211101635c4ef0c63ab997a51d12552dce25a2fc0335d4"
-    },
-    "provenance/metric_scenario_reference.json": {
+    "provenance/historical_metric_scenario_reference.json": {
       "sha256": "5fa8527c8389bc33c1ab6a25a25e9819ed5c967123cce4d0398042f87b094522"
     },
-    "provenance/historical_accepted_scenario_reference.json": {
-      "sha256": "ea6610a9196afbf0ce54e010a3253ca1401fe64a43036da16f5aa38c9b720d03"
+    "model_engine.py": {
+      "sha256": "8af3bc5622e9e30fc75b7b8988790f8b0f015b359a57f033d57a2f304a5f4f46"
+    },
+    "transport_engine.py": {
+      "sha256": "26c382008671c37f6d472f16d591a1ce125bcdcad5a089e9384e31231846d018"
+    },
+    "app.js": {
+      "sha256": "60659e2514c2ca930a7647e1f0015a33533e84fc73878f49ab86680bb1ce0d71"
+    },
+    "index.html": {
+      "sha256": "e1a842658419900cbd7965bf225c37cf92d5abf04baeb5bf09ded0bd99fe9b9d"
     }
   },
   "units": {
@@ -319,5 +335,7 @@
     "speed": "km/year",
     "speed_step": 2
   },
-  "metric_update_note": "Graph effective lengths converted from historical units to km. Speed defaults rounded to 0/16/40/80 km/year. Original accepted scenario retains original unit semantics in provenance; new metric reference is separate."
+  "metric_update_note": "Graph effective lengths converted from historical units to km. Speed defaults rounded to 0/16/40/80 km/year. Original accepted scenario retains original unit semantics in provenance; new metric reference is separate.",
+  "transport_update": "Shifted exponential with 100-km minimum; a single curve supplies all eight bands. Nominal and assigned distribution statistics are reported separately.",
+  "shipping_volume_data_used": false
 }

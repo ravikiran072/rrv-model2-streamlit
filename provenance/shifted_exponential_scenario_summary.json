@@ -1,0 +1,189 @@
+{
+  "inputs": {
+    "distance_unit": "km",
+    "speed_unit": "km/year",
+    "speed_step": 2,
+    "observed_per_year": 0.2,
+    "detection_probability": 0.01,
+    "initial_annual_infectious_transports": 20.0,
+    "annual_infectious_transports": 20.0,
+    "mean_transport_km": 2268.0,
+    "min_transport_km": 100.0,
+    "distance_distribution": "shifted_exponential",
+    "long_share": 0.6001278602059094,
+    "receipt_cutoff": 0.5,
+    "receptivity_cutoff": 0.7928484500378316,
+    "horizon": 20,
+    "mode": "monte_carlo",
+    "random_seed": 20261009,
+    "simulations": 10000,
+    "landscape_mode": "rebuild",
+    "scale_transport_with_burden": true,
+    "include_nidi_as_origins": true,
+    "burden_reference_counties": 877,
+    "speed_very_low": 0.0,
+    "speed_low": 16.0,
+    "speed_moderate": 40.0,
+    "speed_high": 80.0
+  },
+  "distance_distribution": {
+    "family": "shifted_exponential",
+    "minimum_km": 100.0,
+    "mean_total_km": 2268.0,
+    "exponential_scale_km": 2168.0,
+    "central_95_lower_km": 154.8890077099405,
+    "central_95_upper_km": 8097.490656519014,
+    "nominal_long_share": 0.6001278602059094,
+    "long_threshold_km": 1207.008,
+    "band_edges_km": [
+      100.0,
+      160.9344,
+      402.336,
+      804.672,
+      1207.008,
+      1609.344,
+      2414.016,
+      3218.688,
+      null
+    ],
+    "band_weights": [
+      0.027714966397791696,
+      0.10245188986813658,
+      0.14732978506692496,
+      0.12237549846123741,
+      0.10164789568405003,
+      0.1545614594396033,
+      0.10663727703637546,
+      0.23728122804588056
+    ],
+    "note": "Curve probabilities are discretized into eight routing bands; eligible routes and empty-band fallback can alter the assigned distance distribution."
+  },
+  "baseline_count": 1908,
+  "reached": 2003,
+  "added": 95,
+  "nidi": 5,
+  "seeds": [
+    {
+      "index": 149,
+      "year": 9,
+      "p_receipt": 0.5206,
+      "receptivity": 0.8911
+    },
+    {
+      "index": 733,
+      "year": 9,
+      "p_receipt": 0.5157,
+      "receptivity": 0.8871
+    },
+    {
+      "index": 2922,
+      "year": 11,
+      "p_receipt": 0.531,
+      "receptivity": 0.8143
+    },
+    {
+      "index": 3017,
+      "year": 11,
+      "p_receipt": 0.5003,
+      "receptivity": 0.8476
+    },
+    {
+      "index": 1461,
+      "year": 19,
+      "p_receipt": 0.5172,
+      "receptivity": 0.8444
+    }
+  ],
+  "seed_counties": [
+    {
+      "geoid": "05119",
+      "name": "Pulaski County",
+      "state": "AR",
+      "habitat_class": "High",
+      "score_1_minus_pfree": 0.8910859753139598,
+      "map_x": 611.2004883747336,
+      "map_y": 424.1875386697216,
+      "index": 149,
+      "year": 9,
+      "p_receipt": 0.5206,
+      "receptivity": 0.8911
+    },
+    {
+      "geoid": "18089",
+      "name": "Lake County",
+      "state": "IN",
+      "habitat_class": "High",
+      "score_1_minus_pfree": 0.8871007900330363,
+      "map_x": 698.7435431865848,
+      "map_y": 248.77511086207434,
+      "index": 733,
+      "year": 9,
+      "p_receipt": 0.5157,
+      "receptivity": 0.8871
+    },
+    {
+      "geoid": "53033",
+      "name": "King County",
+      "state": "WA",
+      "habitat_class": "High",
+      "score_1_minus_pfree": 0.8142893001761979,
+      "map_x": 96.43528071655844,
+      "map_y": 43.472588985326226,
+      "index": 2922,
+      "year": 11,
+      "p_receipt": 0.531,
+      "receptivity": 0.8143
+    },
+    {
+      "geoid": "55057",
+      "name": "Juneau County",
+      "state": "WI",
+      "habitat_class": "High",
+      "score_1_minus_pfree": 0.8476204818050559,
+      "map_x": 642.8531941965273,
+      "map_y": 188.76036730060764,
+      "index": 3017,
+      "year": 11,
+      "p_receipt": 0.5003,
+      "receptivity": 0.8476
+    },
+    {
+      "geoid": "29095",
+      "name": "Jackson County",
+      "state": "MO",
+      "habitat_class": "High",
+      "score_1_minus_pfree": 0.844381088680927,
+      "map_x": 568.1731494043952,
+      "map_y": 316.78854984346026,
+      "index": 1461,
+      "year": 19,
+      "p_receipt": 0.5172,
+      "receptivity": 0.8444
+    }
+  ],
+  "year20_annual": {
+    "year": 20,
+    "endemic_counties_at_start": 1962,
+    "burden_multiplier": 2.2371721778791334,
+    "annual_infectious_transport_mean": 44.743443557582665,
+    "expected_detected_transports": 0.4474344355758267,
+    "eligible_road_origin_counties": 561,
+    "assignable_road_origin_counties": 528,
+    "destination_probability_mass": 0.9490451822014876,
+    "assigned_mean_distance_km": 1800.789859107607,
+    "assigned_long_share": 0.5622238598747061,
+    "annual_assigned_transport_mean": 42.463549543428016,
+    "annual_unassigned_transport_mean": 2.2798940141546495,
+    "candidate_count": 6,
+    "nidi": 0,
+    "baseline": 1908,
+    "reached": 2003,
+    "added": 95
+  },
+  "source_counts": {
+    "unreached": 1093,
+    "initial": 877,
+    "main_front": 837,
+    "nidus_first": 289
+  }
+}

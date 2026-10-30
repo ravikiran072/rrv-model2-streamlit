@@ -28,7 +28,7 @@ class StreamlitTests(unittest.TestCase):
         self.assertFalse(self.app.exception)
 
     def test_default_map_year_and_county_selection(self):
-        self.assertEqual([m.value for m in self.app.metric], ["2,013", "1,908", "105", "5"])
+        self.assertEqual([m.value for m in self.app.metric], ["2,003", "1,908", "95", "5"])
         original = self.app.session_state.result
         self.widget("slider", "Map year").set_value(0).run()
         self.assertEqual(self.app.metric[2].value, "0")
@@ -48,7 +48,7 @@ class StreamlitTests(unittest.TestCase):
         self.app.run()
         self.assertFalse(self.app.exception)
         self.assertIn("initial_annual_infectious_transports", self.app.session_state.result["inputs"])
-        self.assertEqual(self.app.metric[0].value, "2,013")
+        self.assertEqual(self.app.metric[0].value, "2,003")
 
     def test_cached_engine_is_reloaded_after_model_update(self):
         import model_engine
@@ -110,7 +110,7 @@ class StreamlitTests(unittest.TestCase):
         # Check the actual UI output, since valid SVG alone cannot catch HTML
         # sanitization removing a map in the visitor's browser.
         images = self.app.get("imgs")
-        self.assertEqual(len(images), 1)
+        self.assertEqual(len(images), 2)
         url = images[0].proto.imgs[0].url
         self.assertTrue(url.startswith("data:image/svg+xml;base64,"))
         displayed = ET.fromstring(base64.b64decode(url.split(",", 1)[1]))
@@ -120,19 +120,21 @@ class StreamlitTests(unittest.TestCase):
         self.widget("checkbox", "Scale transports with county burden").uncheck()
         self.widget("checkbox", "Earlier nidi become transport origins").uncheck()
         self.apply()
-        self.assertEqual([m.value for m in self.app.metric][:3], ["1,924", "1,908", "16"])
+        from model_engine import run
+        reference = run({"scale_transport_with_burden": False, "include_nidi_as_origins": False})
+        self.assertEqual(self.app.session_state.result["arrival"], reference["arrival"])
         self.assertTrue(all(a["annual_infectious_transport_mean"] == 20 for a in self.app.session_state.result["annual"]))
         self.widget("checkbox", "Scale transports with county burden").check()
         self.widget("checkbox", "Earlier nidi become transport origins").check()
         self.widget("selectbox", "Calculation").select("analytic")
         self.apply()
-        self.assertEqual([m.value for m in self.app.metric][:3], ["2,013", "1,908", "105"])
+        self.assertEqual([m.value for m in self.app.metric][:3], ["2,003", "1,908", "95"])
 
     def test_accepted_map_attribution_shading_and_year_probabilities(self):
         from streamlit_app import source_code, shade, county_table, SOURCE_COLORS
         result = self.app.session_state.result
         counts = [sum(source_code(result, i, 20) == code for i in range(len(result["arrival"]))) for code in range(4)]
-        self.assertEqual(counts, [1083, 877, 811, 325])
+        self.assertEqual(counts, [1093, 877, 837, 289])
         for code, color in enumerate(SOURCE_COLORS):
             self.assertEqual(shade(code, 0), "#ffffff")
             self.assertEqual(shade(code, 1), color)
@@ -165,6 +167,44 @@ class StreamlitTests(unittest.TestCase):
         self.apply()
         self.assertFalse(self.app.error)
         self.assertEqual(self.app.session_state.result["inputs"]["speed_low"], 18.)
+
+    def test_mean_distance_changes_distribution_and_routes(self):
+        original = self.app.session_state.result
+        self.assertEqual(original["inputs"]["mean_transport_km"], 2268.)
+        self.assertFalse(any(x.label == "Long-haul share (%)" for x in self.app.slider))
+        self.widget("number_input", "Mean total transport distance (km)").set_value(1000.)
+        self.apply()
+        result = self.app.session_state.result
+        self.assertEqual(result["inputs"]["mean_transport_km"], 1000.)
+        self.assertEqual([m.value for m in self.app.metric][:3], ["1,990", "1,908", "82"])
+        self.assertLess(result["distance_distribution"]["nominal_long_share"], original["distance_distribution"]["nominal_long_share"])
+        self.assertEqual(result["annual"][0]["annual_infectious_transport_mean"], 20.)
+        self.assertNotEqual(result["p_receipt"], original["p_receipt"])
+        self.assertTrue(any("central 95%" in x.value.lower() for x in self.app.markdown))
+
+    def test_dropoff_map_year_sync_and_probabilities(self):
+        import base64
+        from streamlit_app import delivery_shade
+        self.assertEqual(delivery_shade(0), "#ffffff")
+        self.assertEqual(delivery_shade(1), "#174a7e")
+        self.assertEqual(delivery_shade(.5), "#8ba5bf")
+        original = self.app.session_state.result
+        self.widget("slider", "Drop-off map year").set_value(0).run()
+        self.assertFalse(self.app.exception)
+        self.assertEqual(self.widget("slider", "Map year").value, 0)
+        self.assertEqual(self.app.session_state.result, original)
+        svg = base64.b64decode(self.app.get("imgs")[1].proto.imgs[0].url.split(",", 1)[1]).decode()
+        paths = [p for p in ET.fromstring(svg).iter("{http://www.w3.org/2000/svg}path") if "data-i" in p.attrib]
+        self.assertEqual(len(paths), 3096)
+        self.assertTrue(all(p.attrib["fill"] == "#ffffff" for p in paths))
+        self.widget("slider", "Map year").set_value(9).run()
+        self.assertFalse(self.app.exception)
+        self.assertEqual(self.widget("slider", "Drop-off map year").value, 9)
+        self.widget("selectbox", "Inspect delivery county").select(149).run()
+        self.assertFalse(self.app.exception)
+        self.assertEqual(self.widget("selectbox", "Inspect a county").value, 149)
+        delivery = next(x.value for x in self.app.dataframe if "delivery_probability_by_map_year" in x.value.columns and "receptivity" not in x.value.columns)
+        self.assertEqual(delivery.iloc[0].delivery_probability_by_map_year, original["receipt_probability_history"][8][149])
 
 
 if __name__ == "__main__":

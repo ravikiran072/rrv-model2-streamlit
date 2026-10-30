@@ -1,0 +1,14 @@
+{
+  "source": "source_model2/reconstruction/routed_distances.npz and translocation_routing_objects.npz",
+  "source_route_sha256": "9f51af89a7afaa9c53f976a4a591f56fe66e30248c25de329cb0272b206a80c8",
+  "route_matrix_shape": [
+    827,
+    827
+  ],
+  "road_counties": 827,
+  "minimum_distance_km": 100,
+  "direction": "destination longitude strictly west of origin",
+  "distance_unit": "km",
+  "exposure_unit": "km of selected Interstate",
+  "traffic_volume_data_used": false
+}

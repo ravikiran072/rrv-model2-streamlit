@@ -15,6 +15,7 @@
   return '#'+rgb.map(v=>v.toString(16).padStart(2,'0')).join('');
  }
  function count(result,year){const n=[0,0,0,0];for(let i=0;i<result.arrival.length;i++)n[source(result,i,year)]++;return n;}
- const api={colors,labels,source,shade,count};root.RRVMapStyle=api;
+ function deliveryShade(value){const probability=Math.max(0,Math.min(1,Number(value)));return '#'+[23,74,126].map(v=>Math.round(255+(v-255)*probability).toString(16).padStart(2,'0')).join('');}
+ const api={colors,labels,source,shade,count,deliveryShade};root.RRVMapStyle=api;
  if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(globalThis);
