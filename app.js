@@ -1,5 +1,5 @@
 'use strict';
-const defaults={observed_per_year:.2,detection_probability:.01,long_share:.6,receipt_cutoff:.5,receptivity_cutoff:.7928484500378316,horizon:20,speed_very_low:0,speed_low:10,speed_moderate:25,speed_high:50,random_seed:20261009,scale_transport_with_burden:true,include_nidi_as_origins:true,mode:'monte_carlo'};
+const defaults={observed_per_year:.2,detection_probability:.01,long_share:.6,receipt_cutoff:.5,receptivity_cutoff:.7928484500378316,horizon:20,speed_very_low:0,speed_low:16,speed_moderate:40,speed_high:80,random_seed:20261009,scale_transport_with_burden:true,include_nidi_as_origins:true,mode:'monte_carlo'};
 const numericFields=Object.keys(defaults).filter(k=>typeof defaults[k]==='number');
 const checkboxFields=['scale_transport_with_burden','include_nidi_as_origins'];
 const percentFields=new Set(['detection_probability','long_share','receipt_cutoff']);
@@ -9,13 +9,13 @@ const expertFields=[
  ['detection_probability','Probability a transport is detected','Fraction; default 0.01','live'],
  ['receptivity_cutoff','Habitat suitability cutoff','Score 0–1; default 0.79284845, year-zero median','live'],
  ['receipt_cutoff','Cumulative delivery probability cutoff','Fraction; default 0.50','live'],
- ['long_haul_share','Long-haul share','Fraction traveling at least 750 routed miles; default 0.60','live'],
- ['spread_speed','Spread speeds by habitat class','Miles/year: very low 0; low 10; moderate 25; high 50','live'],
+ ['long_haul_share','Long-haul share','Fraction traveling at least 1,207.008 routed km; default 0.60','live'],
+ ['spread_speed','Spread speeds by habitat class','km/year: very low 0; low 16; moderate 40; high 80; steps of 2','live'],
  ['burden_scaling','Increase transports as endemic counties increase','Default yes; proportional to start-of-year county count','live'],
  ['new_source_feedback','Earlier nidi become transport origins','Default yes; beginning the following year','live'],
- ['long_haul_distance','Short and long travel-distance bands','Routed miles and weights; recorded for later revisions','record'],
+ ['long_haul_distance','Short and long travel-distance bands','Routed km and weights; recorded for later revisions','record'],
  ['route_scope','Interstate direction and route scope','Even-numbered one/two-digit mainlines; westbound destinations','record'],
- ['origin_destination_weights','Origin and destination weighting','Eligible Interstate miles; recorded for later revisions','record'],
+ ['origin_destination_weights','Origin and destination weighting','Eligible Interstate km; recorded for later revisions','record'],
  ['water_barriers','River and lake effects','Fourfold river delay; large lakes blocked','record']
 ];
 const $=s=>document.querySelector(s);
@@ -57,7 +57,7 @@ function svgExport(){
  for(let code=0;code<4;code++)text+='<linearGradient id="ramp'+code+'"><stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="'+style.colors[code]+'"/></linearGradient>';
  text+='</defs><rect width="1050" height="1055" fill="white"/><text x="20" y="30" font-family="Arial" font-size="24" fill="#17374c">Raccoon rabies — year '+year+'</text><text x="20" y="55" font-family="Arial" font-size="14" fill="#345268">'+(row?row.reached:initial)+' counties reached; '+(row?row.added:0)+' additional from translocation; '+result.seeds.filter(v=>v.year<=year).length+' nidi.</text><g transform="translate(0,75)">'+map.innerHTML+'</g><text x="350" y="765" font-family="Arial" font-size="15" fill="#29485c">P(rabies) score = model-predicted 1 − P(free)</text>';
  for(const [j,code] of [1,2,3,0].entries()){const y=790+48*j;text+='<text x="20" y="'+(y+12)+'" font-family="Arial" font-size="14" fill="#263e4f">'+esc(style.labels[code])+' ('+counts[code]+')</text><rect x="350" y="'+y+'" width="660" height="17" fill="url(#ramp'+code+')"/>';for(const [k,t] of ['0%','25%','50%','75%','100%'].entries())text+='<text x="'+(350+k*165)+'" y="'+(y+32)+'" font-family="Arial" font-size="11" text-anchor="middle">'+t+'</text>';}
- return text+'<text x="20" y="1005" font-family="Arial" font-size="12" fill="#526879">Hue shows earliest arrival source; shading is the habitat-model score. Stars mark nidi.</text><text x="20" y="1028" font-family="Arial" font-size="12" fill="#526879">Transport mean at year '+(year||1)+': '+(row?row.annual_infectious_transport_mean:result.inputs.initial_annual_infectious_transports).toFixed(1)+'/year; speeds '+[result.inputs.speed_very_low,result.inputs.speed_low,result.inputs.speed_moderate,result.inputs.speed_high].join('/')+' miles/year.</text></svg>';
+ return text+'<text x="20" y="1005" font-family="Arial" font-size="12" fill="#526879">Hue shows earliest arrival source; shading is the habitat-model score. Stars mark nidi.</text><text x="20" y="1028" font-family="Arial" font-size="12" fill="#526879">Transport mean at year '+(year||1)+': '+(row?row.annual_infectious_transport_mean:result.inputs.initial_annual_infectious_transports).toFixed(1)+'/year; speeds '+[result.inputs.speed_very_low,result.inputs.speed_low,result.inputs.speed_moderate,result.inputs.speed_high].join('/')+' km/year.</text></svg>';
 }
 function exportResult(type){
  if(!result||$('.results').classList.contains('stale'))return;

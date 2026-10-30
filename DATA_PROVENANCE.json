@@ -1,6 +1,6 @@
 {
   "model": "Final Model 2",
-  "version": "2026-10-26",
+  "version": "2026-10-30",
   "habitat": "14-predictor forest including EPA sewershed coverage; 715 fitting counties; 72 fixed random holdout counties",
   "score": "Predicted 1 - P(free); used for white-to-hue shading in every county, including unreached counties",
   "colors": {
@@ -11,9 +11,9 @@
   },
   "default_reference": {
     "initial_counties": 877,
-    "natural_only_year20": 1917,
-    "reached_year20": 2006,
-    "additional_year20": 89,
+    "natural_only_year20": 1908,
+    "reached_year20": 2013,
+    "additional_year20": 105,
     "independent_nidi": 5
   },
   "default_receptivity_cutoff": 0.7928484500378316,
@@ -57,8 +57,8 @@
       94,
       96
     ],
-    "snap_meters": 60,
-    "simplify_meters": 75,
+    "snap_km": 0.06,
+    "simplify_km": 0.075,
     "routing_geometry": "EPSG:5070 projected line length",
     "county_order": "GPKG fid order; Python zero-based indices",
     "n_counties": 3096,
@@ -68,10 +68,10 @@
     "n_nodes": 29172,
     "n_edges": 31882,
     "n_offroad_corridor_counties": 0,
-    "corridor_buffer_miles": 0,
+    "corridor_buffer_km": 0.0,
     "n_components_before": 43,
     "n_synthetic_connectors": 20,
-    "max_connector_meters": 2000
+    "max_connector_km": 2.0
   },
   "routing": {
     "n_road_counties": 827,
@@ -79,13 +79,13 @@
     "road_counties_in_largest_component": 473,
     "long_capable_origins": 700,
     "finite_routes": 269261,
-    "route_distance_miles_max": 4537.96240234375,
-    "short_band_edges_miles": [
-      0,
-      100,
-      250,
-      500,
-      750
+    "route_distance_km_max": 7303.1425644375,
+    "short_band_edges_km": [
+      0.0,
+      160.9344,
+      402.336,
+      804.672,
+      1207.008
     ],
     "short_band_weights": [
       0.25,
@@ -93,12 +93,12 @@
       0.25,
       0.25
     ],
-    "long_band_edges_miles": [
-      750,
-      1000,
-      1500,
-      2000,
-      3000
+    "long_band_edges_km": [
+      1207.008,
+      1609.344,
+      2414.016,
+      3218.688,
+      4828.032
     ],
     "long_band_weights": [
       0.25,
@@ -106,20 +106,20 @@
       0.25,
       0.2
     ],
-    "destination_weight": "Interstate miles intersecting destination county",
-    "origin_weight": "Interstate miles intersecting occupied origin county",
+    "destination_weight": "Interstate kilometers intersecting destination county",
+    "origin_weight": "Interstate kilometers intersecting occupied origin county",
     "fallback": "nearest populated band within short or long class",
     "direction_rule": "destination county centroid longitude strictly west of origin county centroid longitude",
     "route_scope": "even-numbered one- or two-digit Interstate mainlines only; local bends permitted",
     "note": "Route and weighting assumptions are reconstruction choices, not verified archived parameters"
   },
   "water": {
-    "grid_meters": 10000,
-    "speed_miles_per_year": {
-      "No/very low": 0.0,
-      "Low": 10.0,
-      "Moderate": 25.0,
-      "High": 50.0
+    "grid_km": 10.0,
+    "speed_km_per_year": {
+      "No/very low": 0,
+      "Low": 16,
+      "Moderate": 40,
+      "High": 80
     },
     "river_scalerank_max": 6,
     "river_penalty": 4.0,
@@ -148,9 +148,9 @@
       "road_length_km": 37.08563939585264,
       "lake_bridge_km": 3.6944571739641896,
       "approach_length_km": 0.11298708583923511,
-      "travel_time_years": 2.311415488652014,
       "river_crossings": 0,
-      "road_segments": 473
+      "road_segments": 473,
+      "historical_reference_travel_time_years": 2.311415488652014
     }
   },
   "domain": "Original 3096-county contiguous-US domain; Connecticut absent; 877 initial counties preserved",
@@ -181,7 +181,7 @@
       }
     },
     "landscape_data.npz": {
-      "sha256": "0e0f0580197beb02ff9582effe2b9fcccea1d5edc4f1c38181c2d089fd007210",
+      "sha256": "2d1424a3b94e63dcf264331966fd98ca9285ffb42639629f33252ea007763c7b",
       "arrays": {
         "node_xy": {
           "shape": [
@@ -233,12 +233,6 @@
           ],
           "dtype": "int64"
         },
-        "effective_miles": {
-          "shape": [
-            302915
-          ],
-          "dtype": "float64"
-        },
         "initial_county": {
           "shape": [
             3096
@@ -254,6 +248,12 @@
             3096
           ],
           "dtype": "int32"
+        },
+        "effective_km": {
+          "shape": [
+            302915
+          ],
+          "dtype": "float64"
         }
       }
     },
@@ -306,8 +306,18 @@
     "provenance/final_habitat_forest_715.joblib": {
       "sha256": "5f13b37eff60f3338c211101635c4ef0c63ab997a51d12552dce25a2fc0335d4"
     },
-    "provenance/accepted_scenario_reference.json": {
+    "provenance/metric_scenario_reference.json": {
+      "sha256": "5fa8527c8389bc33c1ab6a25a25e9819ed5c967123cce4d0398042f87b094522"
+    },
+    "provenance/historical_accepted_scenario_reference.json": {
       "sha256": "ea6610a9196afbf0ce54e010a3253ca1401fe64a43036da16f5aa38c9b720d03"
     }
-  }
+  },
+  "units": {
+    "distance": "km",
+    "area": "km2",
+    "speed": "km/year",
+    "speed_step": 2
+  },
+  "metric_update_note": "Graph effective lengths converted from historical units to km. Speed defaults rounded to 0/16/40/80 km/year. Original accepted scenario retains original unit semantics in provenance; new metric reference is separate."
 }

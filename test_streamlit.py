@@ -28,7 +28,7 @@ class StreamlitTests(unittest.TestCase):
         self.assertFalse(self.app.exception)
 
     def test_default_map_year_and_county_selection(self):
-        self.assertEqual([m.value for m in self.app.metric], ["2,006", "1,917", "89", "5"])
+        self.assertEqual([m.value for m in self.app.metric], ["2,013", "1,908", "105", "5"])
         original = self.app.session_state.result
         self.widget("slider", "Map year").set_value(0).run()
         self.assertEqual(self.app.metric[2].value, "0")
@@ -48,7 +48,7 @@ class StreamlitTests(unittest.TestCase):
         self.app.run()
         self.assertFalse(self.app.exception)
         self.assertIn("initial_annual_infectious_transports", self.app.session_state.result["inputs"])
-        self.assertEqual(self.app.metric[0].value, "2,006")
+        self.assertEqual(self.app.metric[0].value, "2,013")
 
     def test_cached_engine_is_reloaded_after_model_update(self):
         import model_engine
@@ -72,7 +72,7 @@ class StreamlitTests(unittest.TestCase):
         self.assertEqual(self.app.session_state.result["inputs"]["observed_per_year"], 0.)
         self.widget("number_input", "Detected transported rabid raccoons / year").set_value(.2)
         self.widget("number_input", "Detection probability (%)").set_value(1.)
-        self.widget("number_input", "High habitat (miles/year)").set_value(40.)
+        self.widget("number_input", "High habitat (km/year)").set_value(40.)
         self.widget("slider", "Horizon (years)").set_value(5)
         self.apply()
         self.assertEqual(self.app.session_state.result["inputs"]["landscape_mode"], "rebuild")
@@ -120,19 +120,19 @@ class StreamlitTests(unittest.TestCase):
         self.widget("checkbox", "Scale transports with county burden").uncheck()
         self.widget("checkbox", "Earlier nidi become transport origins").uncheck()
         self.apply()
-        self.assertEqual([m.value for m in self.app.metric][:3], ["1,935", "1,917", "18"])
+        self.assertEqual([m.value for m in self.app.metric][:3], ["1,924", "1,908", "16"])
         self.assertTrue(all(a["annual_infectious_transport_mean"] == 20 for a in self.app.session_state.result["annual"]))
         self.widget("checkbox", "Scale transports with county burden").check()
         self.widget("checkbox", "Earlier nidi become transport origins").check()
         self.widget("selectbox", "Calculation").select("analytic")
         self.apply()
-        self.assertEqual([m.value for m in self.app.metric][:3], ["2,014", "1,917", "97"])
+        self.assertEqual([m.value for m in self.app.metric][:3], ["2,013", "1,908", "105"])
 
     def test_accepted_map_attribution_shading_and_year_probabilities(self):
         from streamlit_app import source_code, shade, county_table, SOURCE_COLORS
         result = self.app.session_state.result
         counts = [sum(source_code(result, i, 20) == code for i in range(len(result["arrival"]))) for code in range(4)]
-        self.assertEqual(counts, [1090, 877, 815, 314])
+        self.assertEqual(counts, [1083, 877, 811, 325])
         for code, color in enumerate(SOURCE_COLORS):
             self.assertEqual(shade(code, 0), "#ffffff")
             self.assertEqual(shade(code, 1), color)
@@ -147,6 +147,24 @@ class StreamlitTests(unittest.TestCase):
         self.assertFalse(self.app.exception)
         displayed = self.app.dataframe[0].value.iloc[0]
         self.assertEqual(displayed.delivery_probability_by_map_year, result["receipt_probability_history"][8][149])
+
+    def test_metric_speed_controls_and_export(self):
+        import base64
+        labels = ("No/very-low", "Low", "Moderate", "High")
+        for label, default in zip(labels, (0., 16., 40., 80.)):
+            widget = self.widget("number_input", f"{label} habitat (km/year)")
+            self.assertEqual(widget.value, default)
+            self.assertEqual((widget.proto.min, widget.proto.max, widget.proto.step), (0., 400., 2.))
+        self.assertEqual(self.app.session_state.result["inputs"]["speed_unit"], "km/year")
+        svg = base64.b64decode(self.app.get("imgs")[0].proto.imgs[0].url.split(",", 1)[1]).decode()
+        self.assertIn("km/year", svg)
+        self.widget("number_input", "Low habitat (km/year)").set_value(17.)
+        self.apply()
+        self.assertIn("multiples of 2 km/year", self.app.error[0].value)
+        self.widget("number_input", "Low habitat (km/year)").set_value(18.)
+        self.apply()
+        self.assertFalse(self.app.error)
+        self.assertEqual(self.app.session_state.result["inputs"]["speed_low"], 18.)
 
 
 if __name__ == "__main__":

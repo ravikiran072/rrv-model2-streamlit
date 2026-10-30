@@ -2,9 +2,9 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const style=require('./map_style.js');
-const result=JSON.parse(fs.readFileSync(path.join(__dirname,'provenance/accepted_scenario_reference.json')));
+const result=JSON.parse(fs.readFileSync(path.join(__dirname,'provenance/metric_scenario_reference.json')));
 assert.deepEqual(style.colors,['#a6b2bb','#438bb5','#e7a13e','#cf704b']);
-assert.deepEqual(style.count(result,20),[1090,877,815,314]);
+assert.deepEqual(style.count(result,20),[1083,877,811,325]);
 assert.deepEqual(style.count(result,0),[2219,877,0,0]);
 for(let c=0;c<4;c++){
  assert.equal(style.shade(c,0),'#ffffff');

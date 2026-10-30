@@ -8,7 +8,7 @@ from scipy.sparse.csgraph import dijkstra
 from scipy.spatial import cKDTree
 
 ROOT = Path(__file__).resolve().parent
-DEFAULT_SPEEDS = (0., 10., 25., 50.)
+DEFAULT_SPEEDS = (0., 16., 40., 80.)  # km/year
 LABELS = ("No/very low", "Low", "Moderate", "High")
 
 
@@ -39,7 +39,7 @@ def landscape(speeds):
     for corner in (z["corner1"], z["corner2"]):
         valid &= (corner < 0) | (speed[np.maximum(corner, 0)] > 0)
     u, v = u[valid], v[valid]
-    costs = z["effective_miles"][valid] * .5 * (1 / speed[u] + 1 / speed[v])
+    costs = z["effective_km"][valid] * .5 * (1 / speed[u] + 1 / speed[v])
     graph = coo_matrix((np.r_[costs, costs], (np.r_[u, v], np.r_[v, u])),
                        shape=(len(speed), len(speed))).tocsr()
     active = np.flatnonzero(speed > 0)

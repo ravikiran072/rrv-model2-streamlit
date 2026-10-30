@@ -16,9 +16,10 @@ streamlit_app.py as the main file and Python 3.12 in advanced settings.
 See README.md for deployment and expert-response storage instructions.
 The original interface is still available with: python app.py
 
-UPDATED OCTOBER 26
+UPDATED OCTOBER 30
 Updated habitat model includes EPA sewershed coverage. Annual transports scale
 with reached-county burden and earlier nidi contribute transport origins.
 Every scenario recalculates the landscape from year zero. Default year 20:
-2,006 reached counties; 1,917 natural-only; 89 additional; 5 independent nidi.
+2,013 reached counties; 1,908 natural-only; 105 additional; 5 independent nidi.
+Spread speeds use km/year: defaults 0 / 16 / 40 / 80; steps of 2 (0-400).
 The map uses source colors, white-to-hue habitat shading, and nidus stars.

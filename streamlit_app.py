@@ -20,11 +20,11 @@ import landscape_engine
 
 ROOT = Path(__file__).resolve().parent
 SPEED_KEYS = ("speed_very_low", "speed_low", "speed_moderate", "speed_high")
-DEFAULT_SPEEDS = (0., 10., 25., 50.)
 MODEL_REVISION = hashlib.sha256(b"".join((ROOT / name).read_bytes() for name in
     ("model_info.json", "model_engine.py", "model_utils.py", "landscape_engine.py",
      "model_data.npz", "landscape_data.npz", "route_kernels.npz"))).hexdigest()
 MODEL_INFO = json.loads((ROOT / "model_info.json").read_text(encoding="utf-8"))
+DEFAULT_SPEEDS = tuple(float(value) for value in MODEL_INFO["default_speeds_km_per_year"])
 # Streamlit reruns this script after a Git update, while Python can retain
 # imported engines and their in-memory array caches from the previous release.
 # Reload the dependent modules together when the bundled model changes.
@@ -41,13 +41,13 @@ EXPERT_FIELDS = [
     ("detection_probability", "Detection probability", "Fraction; default 0.01", "Active"),
     ("receptivity_cutoff", "Habitat receptivity cutoff", "Score 0–1; default 0.7928484500378316 (year-zero median)", "Active"),
     ("receipt_cutoff", "County receipt cutoff", "Fraction; default 0.50", "Active"),
-    ("long_haul_share", "Long-haul share", "Fraction ≥750 routed miles; default 0.60", "Active"),
-    ("spread_speed", "Spread speeds by habitat", "Miles/year; default 0 / 10 / 25 / 50", "Active"),
+    ("long_haul_share", "Long-haul share", "Fraction ≥1,207.008 routed km; default 0.60", "Active"),
+    ("spread_speed", "Spread speeds by habitat", "km/year; default 0 / 16 / 40 / 80; steps of 2", "Active"),
     ("burden_scaling", "Transport burden scaling", "Default on; proportional to start-of-year reached counties", "Active"),
     ("new_source_feedback", "Earlier nidi as transport origins", "Default on; beginning the following year", "Active"),
-    ("long_haul_distance", "Distance bands", "Routed miles / trip distribution", "Recorded only"),
+    ("long_haul_distance", "Distance bands", "Routed km / trip distribution", "Recorded only"),
     ("route_scope", "Interstate corridor scope", "Even-numbered one/two-digit, westbound", "Recorded only"),
-    ("origin_destination_weights", "Origin and destination weighting", "Eligible Interstate miles", "Recorded only"),
+    ("origin_destination_weights", "Origin and destination weighting", "Eligible Interstate km", "Recorded only"),
     ("water_barriers", "River and lake effects", "Fourfold river delay; lakes blocked", "Recorded only"),
 ]
 
@@ -73,9 +73,10 @@ def current_result(result):
                 "p_receipt", "receipt_probability_history", "seeds", "model_note"}
     required_inputs = {"initial_annual_infectious_transports", "scale_transport_with_burden",
                        "include_nidi_as_origins", "horizon", "mode", "random_seed",
-                       "receipt_cutoff", "receptivity_cutoff", "landscape_mode"}
+                       "receipt_cutoff", "receptivity_cutoff", "landscape_mode", "speed_unit", "distance_unit"}
     return (required.issubset(result) and isinstance(result["inputs"], dict)
             and required_inputs.issubset(result["inputs"])
+            and result["inputs"]["speed_unit"] == "km/year"
             and isinstance(result["annual"], list) and bool(result["annual"])
             and all(isinstance(row, dict) and {"annual_infectious_transport_mean",
                     "expected_detected_transports", "year", "baseline", "reached", "added"}.issubset(row)
@@ -175,7 +176,8 @@ def map_svg(result, year):
             '<text x="350" y="765">Habitat score = model-predicted 1 − P(free)</text>'
             + ''.join(legend) + '<text x="20" y="1005" font-size="12">'
             'Hue shows earliest arrival source; shade is the habitat score. Stars mark independent nidi.</text>'
-            '<text x="20" y="1028" font-size="12">Shading is not a year-specific infection probability or delivery probability.</text></g></svg>')
+            '<text x="20" y="1028" font-size="12">Shading is not a year-specific infection probability or delivery probability.</text>'
+            f'<text x="20" y="1047" font-size="12">Spread speeds: {" / ".join(str(result["inputs"][key]) for key in SPEED_KEYS)} km/year.</text></g></svg>')
 
 
 def controls():
@@ -185,7 +187,7 @@ def controls():
         with st.form("scenario"):
             observed = st.number_input("Detected transported rabid raccoons / year", 0., 20., .2, .1, format="%.3f", help="Year-zero detected transport rate; annual transports can grow with burden.")
             detection = st.number_input("Detection probability (%)", .01, 100., 1., .1, format="%.2f")
-            long_share = st.slider("Long-haul share (%)", 0., 100., 60.)
+            long_share = st.slider("Long-haul share (%)", 0., 100., 60., help="Share traveling at least 1,207.008 routed km.")
             receipt = st.slider("Minimum cumulative delivery chance (%)", 0., 100., 50.)
             receptivity = st.number_input("Minimum habitat suitability score", 0., 1., MODEL_INFO["default_receptivity_cutoff"], .01, format="%.6f")
             horizon = st.slider("Horizon (years)", 1, 20, 20)
@@ -196,9 +198,11 @@ def controls():
             feedback = st.checkbox("Earlier nidi become transport origins", value=True,
                                    help="Earlier nidi and their onward spread contribute origins beginning the following year.")
             st.subheader("Natural spread")
-            speeds = [st.number_input(f"{label} habitat (miles/year)", 0., 250., value, 5.)
+            speeds = [st.number_input(f"{label} habitat (km/year)",
+                      float(MODEL_INFO["speed_range_km_per_year"][0]),
+                      float(MODEL_INFO["speed_range_km_per_year"][1]), value, float(MODEL_INFO["speed_step"]))
                       for label, value in zip(("No/very-low", "Low", "Moderate", "High"), DEFAULT_SPEEDS)]
-            st.caption("The landscape, annual origins, and onward spread are recalculated from year zero for every scenario.")
+            st.caption("Speeds use steps of 2 km/year (0–400). The landscape, annual origins, and onward spread are recalculated from year zero for every scenario.")
             applied = st.form_submit_button("Apply scenario", type="primary", width="stretch")
     params = dict(observed_per_year=observed, detection_probability=detection / 100,
                   long_share=long_share / 100, receipt_cutoff=receipt / 100,
